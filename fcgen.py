@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import time
 
 from data import *
 
@@ -12,7 +13,6 @@ class Application:
         self.profiles = self.load_profiles()
         self.determine_current_stage()
         self.menu = Menu(self.current_module, self.current_stage)
-        # self.settings = {}
         self.menu_items_dict = module_menus[self.current_module]
         self.input_to_action_key = {v: k for k, v in self.menu_items_dict.items()}
         self.action_dispatcher = self.create_action_dispatcher()
@@ -25,19 +25,18 @@ class Application:
             user_input = input('What you want to do? ')
             self.handle_user_input(user_input)
 
-    @staticmethod
-    def create_action_dispatcher():
+    def create_action_dispatcher(self):
         return {
-            'new_profile': AddNewProfile(),
-            'select_profile': SelectProfile(),
-            'edit_profile': EditProfile(),
+            'new_profile': AddNewProfile(self),
+            'select_profile': SelectProfile(self),
+            'edit_profile': EditProfile(self),
             # 'select_source': '',
             # 'source_notion': '',
             # 'source_pdf': '',
             # 'source_txt': '',
             # 'generate_cards': '',
             # 'profile_menu': '',
-            'exit': ExitProgram()
+            'exit': ExitProgram(self)
         }
 
     def menu_needs_update(self):
@@ -91,6 +90,9 @@ class Menu:
 
 
 class Action:
+    def __init__(self, app_inst):
+        self.app_inst = app_inst
+
     def execute(self):
         raise NotImplementedError("Subclasses should implement this!")
 
@@ -103,6 +105,9 @@ class AddNewProfile(Action):
         self.log('Adding a new profile...')
         # Logic for adding a new profile
         print('New profile added.')
+        time.sleep(3)
+        self.app_inst.clear_screen()
+        self.app_inst.change_stage('no_profile_selected')
 
 
 class SelectProfile(Action):
@@ -110,13 +115,18 @@ class SelectProfile(Action):
         self.log('Profile selection...')
         # Logic for adding a new profile
         print('Profile selected.')
+        time.sleep(3)
+        self.app_inst.clear_screen()
+        self.app_inst.change_stage('profile_selected')
 
 
 class EditProfile(Action):
     def execute(self):
         self.log('Profile editing...')
-        # Logic for adding a new profile
+        # Logic for editing profile
         print('Profile edited.')
+        time.sleep(3)
+        self.app_inst.clear_screen()
 
 
 class ExitProgram(Action):
