@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 import time
+import json
 
 from data import *
 
@@ -89,6 +90,24 @@ class Menu:
             print(item)
 
 
+class Profile:
+    def __init__(self, profile_name, openai_api_key, gpt_model):
+        self.profile_name = profile_name
+        self.openai_api_key = openai_api_key
+        self.gpt_model = gpt_model
+
+    def as_dict(self):
+        return {
+            'profile_name': self.profile_name,
+            'openai_api_key': self.openai_api_key,
+            'gpt_model': self.gpt_model
+        }
+
+    def save_to_file(self, file_path):
+        with open(file_path, 'w') as file:
+            json.dump(self.as_dict(), file, indent=4)
+
+
 class Action:
     def __init__(self, app_inst):
         self.app_inst = app_inst
@@ -102,12 +121,26 @@ class Action:
 
 class AddNewProfile(Action):
     def execute(self):
+        Application.clear_screen()
         self.log('Adding a new profile...')
-        # Logic for adding a new profile
+
+        # Obtaining profile data from user
+        profile_name = input('Enter your new profile name: ')
+        openai_api_key = input('Enter your OpenAI API Key: ')
+        gpt_model = input('Enter GPT model: ')
+
+        # Saving to file obtained profile data
+        new_profile = Profile(profile_name, openai_api_key, gpt_model)
+        file_path = f'profiles/{profile_name}.json'
+        new_profile.save_to_file(file_path)
+
         print('New profile added.')
         time.sleep(3)
+
+        # Updating application stage
         self.app_inst.clear_screen()
-        self.app_inst.change_stage('no_profile_selected')
+        if self.app_inst.profiles:
+            self.app_inst.change_stage('no_profile_selected')
 
 
 class SelectProfile(Action):
