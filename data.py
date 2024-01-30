@@ -28,3 +28,5 @@ stages = {
     'no_note_selected': ['source_notion', 'source_pdf', 'source_txt', 'profile_menu', 'exit'],
     'note_selected': ['source_notion', 'source_pdf', 'source_txt', 'generate_cards', 'profile_menu', 'exit']
 }
+
+openai_models = ["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4"]
