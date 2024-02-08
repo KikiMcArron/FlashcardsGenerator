@@ -1,4 +1,3 @@
-
 profile_menu_items = {
     'new_profile': '1. Add new profile',
     'select_profile': '2. Select profile',
@@ -30,4 +29,3 @@ stages = {
 }
 
 openai_models = ["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4"]
-
