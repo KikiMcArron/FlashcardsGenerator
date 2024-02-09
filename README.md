@@ -9,8 +9,9 @@ Idea of the program is to generate flashcards based on user notes with assistanc
 #       2. Select profile
 #       3. Edit profile
 #   II  Select source
-#       1. Notion note
-#       2. Other sources in future
+#       1. Text note
+#       2. Notion note
+#       3. Other sources in future
 #   III Generate cards
 #   IV  Work with cards
 #       Repeat until all cards finished
@@ -21,6 +22,3 @@ Idea of the program is to generate flashcards based on user notes with assistanc
 #       2. Save card
 #   V   Export cards
 
-# TODO:
-# 1. Save current stage somewhere to not lose the flow if program will be closed for some reason
-# 2. 

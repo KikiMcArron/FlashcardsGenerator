@@ -1,5 +1,4 @@
 import os
-import subprocess
 import sys
 import time
 import json
@@ -14,10 +13,20 @@ class Application:
         self.current_stage = None
         self.current_profile = None
         self.profile_manager = ProfileManager()
-        # self.profiles = self.profile_manager.load_profiles()
         self.determine_current_stage()
         self.menu = Menu(self.current_module, self.current_stage)
-        self.action_dispatcher = self.create_action_dispatcher()
+        self.action_dispatcher = {
+            'new_profile': AddNewProfile(self, self.profile_manager),
+            'select_profile': SelectProfile(self, self.profile_manager),
+            'edit_profile': EditProfile(self, self.profile_manager),
+            # 'select_source': '',
+            # 'source_notion': '',
+            # 'source_pdf': '',
+            # 'source_txt': '',
+            # 'generate_cards': '',
+            # 'profile_menu': '',
+            'exit': ExitProgram(self, self.profile_manager)
+        }
 
     def main(self):
         Tools.clear_screen()
@@ -31,11 +40,13 @@ class Application:
 
     def determine_current_stage(self):
         if not self.profile_manager.profiles:
-            self.current_module = 'profile'
-            self.current_stage = 'initiation'
+            self.set_current_stage('profile', 'initiation')
         elif not self.current_profile:
-            self.current_module = 'profile'
-            self.current_stage = 'no_profile_selected'
+            self.set_current_stage('profile', 'no_profile_selected')
+
+    def set_current_stage(self, module, stage):
+        self.current_module = module
+        self.current_stage = stage
 
     def change_stage(self, new_stage):
         if new_stage in stages:
@@ -45,8 +56,9 @@ class Application:
             print(f'Invalid stage: {new_stage}.')
 
     def handle_user_input(self, user_input):
-        user_action_key = next((k for k, v in self.input_to_action_key().items() if k.startswith(user_input)), None)
-        action_key = self.input_to_action_key().get(user_action_key)
+        input_to_action_key = self.input_to_action_key()
+        user_action_key = next((k for k, v in input_to_action_key.items() if k.startswith(user_input)), None)
+        action_key = input_to_action_key.get(user_action_key)
         if action_key:
             action = self.action_dispatcher.get(action_key)
             action.execute()
@@ -59,27 +71,13 @@ class Application:
         menu_items_dict = module_menus[self.current_module]
         return {v: k for k, v in menu_items_dict.items()}
 
-    def create_action_dispatcher(self):
-        return {
-            'new_profile': AddNewProfile(self, self.profile_manager),
-            'select_profile': SelectProfile(self, self.profile_manager),
-            'edit_profile': EditProfile(self, self.profile_manager),
-            # 'select_source': '',
-            # 'source_notion': '',
-            # 'source_pdf': '',
-            # 'source_txt': '',
-            # 'generate_cards': '',
-            # 'profile_menu': '',
-            'exit': ExitProgram(self, self.profile_manager)
-        }
-
 
 class Tools:
     clear_command = 'cls' if os.name == 'nt' else 'clear'
 
     @staticmethod
     def clear_screen():
-        subprocess.call(Tools.clear_command, shell=True)
+        os.system(Tools.clear_command)
 
 
 class Menu:
@@ -211,6 +209,7 @@ class ProfileManager:
         new_profile.save_to_file(f'profiles/{profile_name}.json')
 
     def edit_profile(self):
+        # TODO: After selecting a profile and then editing it, the data displayed in the profile information remains unchanged.
         selected_profile = self.select_profile()
         profile_dict = selected_profile.as_dict()
         original_profile_name = selected_profile.profile_name
