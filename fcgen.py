@@ -166,6 +166,7 @@ class ProfileManager:
 
     def __init__(self, profiles_dir='profiles', settings_file='settings.json'):
         """ Initialize the profile manager. """
+        self.validator = ProfileValidations()
         self.settings_file = settings_file
         self.profiles_dir = profiles_dir
         self.profiles = self.load_profiles()
@@ -183,7 +184,7 @@ class ProfileManager:
                 with open(file_path, 'r') as file:
                     try:
                         profile_data = json.load(file)
-                        if self.is_valid_profile_file(profile_data):
+                        if self.validator.is_valid_profile_file(profile_data):
                             profile = Profile(**profile_data)
                             profiles.append(profile)
                     except json.JSONDecodeError:
@@ -199,7 +200,7 @@ class ProfileManager:
             choice = input(f'Select profile (1-{len(self.profiles)}) >>>> ')
             if choice.isdigit() and int(choice) in range(1, len(self.profiles) + 1):
                 self.profile = self.profiles[int(choice) - 1]
-                self.validate_profile(self.profile)
+                self.validator.validate_profile(self.profile)
                 self.update_profile_if_needed(self.profile)
                 self.save_current_profile(self.profile.profile_name)
                 return self.profile
@@ -208,7 +209,7 @@ class ProfileManager:
 
     def update_profile_if_needed(self, profile):
         """ Update the profile if necessary. """
-        validation_errors = self.validate_profile(profile)
+        validation_errors = self.validator.validate_profile(profile)
         if 'openai_api_key' in validation_errors:
             clear_screen()
             print(validation_errors['openai_api_key'])
@@ -221,35 +222,11 @@ class ProfileManager:
             print(f'The GPT model in profile "{profile.profile_name}" has been updated')
         self.save_to_file(profile, f'profiles/{profile.profile_name}.json')
 
-    @staticmethod
-    def is_valid_profile_file(data):
-        """ Validate if file is a valid profile file. """
-        requires_fields = ['profile_name', 'openai_api_key', 'gpt_model']
-        return all(field in data for field in requires_fields)
-
-    def validate_profile(self, profile):
-        """ Validate profile data and update it if necessary. """
-        validation_errors = {}
-        if not self.is_valid_openai_api_key(profile.openai_api_key):
-            validation_errors['openai_api_key'] = (f'Invalid or no OpenAI API Key selected in profile '
-                                                   f'"{profile.profile_name}"')
-        if not self.is_valid_gpt_model(profile.gpt_model):
-            validation_errors['gpt_model'] = f'Invalid or no GPT model selected for profile "{profile.profile_name}"'
-        return validation_errors
-
-    @staticmethod
-    def is_valid_openai_api_key(openai_api_key):
-        return len(openai_api_key) == 51 and openai_api_key.startswith('sk-') and openai_api_key[3:].isalnum()
-
-    @staticmethod
-    def is_valid_gpt_model(gpt_model):
-        return gpt_model in openai_models
-
     def add_new_profile(self):
         """ Add a new profile. """
         while True:
             profile_name = input('Enter your new profile name: ')
-            if self.is_unique_profile_name(profile_name):
+            if self.validator.is_unique_profile_name(self.profiles, profile_name):
                 break
             else:
                 print(f'Profile {profile_name} already exist')
@@ -284,7 +261,7 @@ class ProfileManager:
                     profile_dict[field] = handler()
                 else:
                     profile_dict[field] = input(handler)
-                if field == 'profile_name' and not self.is_unique_profile_name(profile_dict[field]):
+                if field == 'profile_name' and not self.validator.is_unique_profile_name(self.profiles, profile_dict[field]):
                     print(f'Profile {profile_dict[field]} already exists. Please choose a different name.')
                     continue
             elif choice == '9':
@@ -294,7 +271,8 @@ class ProfileManager:
 
         self.update_profile(original_profile_name, profile_dict)
         if self.profile and self.profile.profile_name == original_profile_name:
-            self.profile = next((profile for profile in self.profiles if profile.profile_name == profile_dict['profile_name']), None)
+            self.profile = next(
+                (profile for profile in self.profiles if profile.profile_name == profile_dict['profile_name']), None)
 
     @staticmethod
     def save_to_file(profile, file_path):
@@ -312,10 +290,6 @@ class ProfileManager:
         for index, (key, _) in enumerate(profile_dict.items(), start=1):
             print(f'{index}. {key.replace("_", " ").upper()}')
         print('9. Finish editing')
-
-    def is_unique_profile_name(self, profile_name):
-        """ Check if the profile name is unique. """
-        return not any(profile.profile_name == profile_name for profile in self.profiles)
 
     def update_profile(self, original_profile_name, profile_dict):
         """ Update the profile with new data. """
@@ -371,6 +345,39 @@ class ProfileManager:
             settings = json.load(file)
         current_profile_name = settings.get('current_profile')
         return next((profile for profile in self.profiles if profile.profile_name == current_profile_name), None)
+
+
+class ProfileValidations:
+    """ Class responsible for validating profiles. """
+
+    @staticmethod
+    def is_unique_profile_name(profiles, profile_name):
+        """ Check if the profile name is unique. """
+        return not any(profile.profile_name == profile_name for profile in profiles)
+
+    @staticmethod
+    def is_valid_profile_file(data):
+        """ Validate if file is a valid profile file. """
+        requires_fields = ['profile_name', 'openai_api_key', 'gpt_model']
+        return all(field in data for field in requires_fields)
+        pass
+
+    def validate_profile(self, profile):
+        """ Validate the profile. """
+        validation_errors = {}
+        if not self.is_valid_openai_api_key(profile.openai_api_key):
+            validation_errors['openai_api_key'] = 'Invalid or no OpenAI API Key selected'
+        if not self.is_valid_gpt_model(profile.gpt_model):
+            validation_errors['gpt_model'] = 'Invalid or no GPT model selected'
+        return validation_errors
+
+    @staticmethod
+    def is_valid_openai_api_key(openai_api_key):
+        return len(openai_api_key) == 51 and openai_api_key.startswith('sk-') and openai_api_key[3:].isalnum()
+
+    @staticmethod
+    def is_valid_gpt_model(gpt_model):
+        return gpt_model in openai_models
 
 
 class Action:
