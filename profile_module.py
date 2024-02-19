@@ -1,0 +1,249 @@
+import os
+import json
+import stdiomask
+
+from data import openai_models
+from fcgen import clear_screen
+
+
+class Profile:
+    """ Class representing a profile. """
+
+    def __init__(self, profile_name=None, openai_api_key=None, gpt_model=None):
+        """ Initialize the profile. """
+        self.profile_name = profile_name
+        self.openai_api_key = openai_api_key
+        self.gpt_model = gpt_model
+
+    def __str__(self):
+        """ Return a string representation of the profile. """
+        return (f'{self.profile_name} (OpenAI API Key: sk-...{self.openai_api_key[-4:]}, GPT Model: '
+                f'{self.gpt_model})')
+
+    def as_dict(self):
+        """ Return the profile as a dictionary. """
+        return {
+            'profile_name': self.profile_name,
+            'openai_api_key': self.openai_api_key,
+            'gpt_model': self.gpt_model
+        }
+
+
+class ProfileManager:
+    """ Class responsible for managing profiles. """
+
+    def __init__(self, profiles_dir='profiles', settings_file='settings.json'):
+        """ Initialize the profile manager. """
+        self.validator = ProfileValidations()
+        self.settings_file = settings_file
+        self.profiles_dir = profiles_dir
+        self.profiles = self.load_profiles()
+        self.profile = self.determine_current_profile()
+
+    def load_profiles(self):
+        """ Load profiles from files. """
+        if not os.path.exists(self.profiles_dir):
+            os.makedirs(self.profiles_dir, exist_ok=True)
+            return []
+        profiles = []
+        for filename in os.listdir(self.profiles_dir):
+            if filename.endswith('.json'):
+                file_path = os.path.join(self.profiles_dir, filename)
+                with open(file_path, 'r') as file:
+                    try:
+                        profile_data = json.load(file)
+                        if self.validator.is_valid_profile_file(profile_data):
+                            profile = Profile(**profile_data)
+                            profiles.append(profile)
+                    except json.JSONDecodeError:
+                        print(f'Error decoding JSON from file "{file_path}".')
+        return profiles
+
+    def select_profile(self):
+        """ Select a profile from the list of profiles. """
+        self.profiles = self.load_profiles()
+        for index, profile in enumerate(self.profiles):
+            print(f'{index + 1}. {profile}')
+        while True:
+            choice = input(f'Select profile (1-{len(self.profiles)}) >>>> ')
+            if choice.isdigit() and int(choice) in range(1, len(self.profiles) + 1):
+                self.profile = self.profiles[int(choice) - 1]
+                self.validator.validate_profile(self.profile)
+                self.update_profile_if_needed(self.profile)
+                self.save_current_profile(self.profile.profile_name)
+                return self.profile
+            else:
+                print(f'Invalid choice. Please enter a number between 1 and {len(self.profiles)}.')
+
+    def update_profile_if_needed(self, profile):
+        """ Update the profile if necessary. """
+        validation_errors = self.validator.validate_profile(profile)
+        if 'openai_api_key' in validation_errors:
+            clear_screen()
+            print(validation_errors['openai_api_key'])
+            profile.openai_api_key = self.get_openai_api_key_from_user()
+            print(f'The OpenAI Key in profile "{profile.profile_name}" has been updated')
+        if 'gpt_model' in validation_errors:
+            clear_screen()
+            print(validation_errors['gpt_model'])
+            profile.gpt_model = self.select_model()
+            print(f'The GPT model in profile "{profile.profile_name}" has been updated')
+        self.save_to_file(profile, f'profiles/{profile.profile_name}.json')
+
+    def add_new_profile(self):
+        """ Add a new profile. """
+        while True:
+            profile_name = input('Enter your new profile name: ')
+            if self.validator.is_unique_profile_name(self.profiles, profile_name):
+                break
+            else:
+                print(f'Profile {profile_name} already exist')
+        openai_api_key = self.get_openai_api_key_from_user()
+        gpt_model = self.select_model()
+        new_profile = Profile(profile_name, openai_api_key, gpt_model)
+        self.save_to_file(new_profile, f'profiles/{profile_name}.json')
+
+    def edit_profile(self):
+        """ Edit a profile from the list of profiles."""
+        # TODO: After selecting a profile and then editing it, selected profile is changed to None (even if no
+        #  changes has been made).
+        selected_profile = self.select_profile()
+        profile_dict = selected_profile.as_dict()
+        original_profile_name = selected_profile.profile_name
+        clear_screen()
+
+        options = {
+            '1': ('profile_name', 'Enter new profile name: '),
+            '2': ('openai_api_key', self.get_openai_api_key_from_user),
+            '3': ('gpt_model', self.select_model)
+        }
+
+        while True:
+            clear_screen()
+            self.display_edit_menu(profile_dict)
+            choice = input('Select >>>>  ')
+
+            if choice in options:
+                field, handler = options[choice]
+                if callable(handler):
+                    profile_dict[field] = handler()
+                else:
+                    profile_dict[field] = input(handler)
+                if field == 'profile_name' and not self.validator.is_unique_profile_name(self.profiles,
+                                                                                         profile_dict[field]):
+                    print(f'Profile {profile_dict[field]} already exists. Please choose a different name.')
+                    continue
+            elif choice == '9':
+                break
+            else:
+                print('Invalid choice. Please select 1-3 to edit selected element or 9 to finish editing.')
+
+        self.update_profile(original_profile_name, profile_dict)
+        if self.profile and self.profile.profile_name == original_profile_name:
+            self.profile = next(
+                (profile for profile in self.profiles if profile.profile_name == profile_dict['profile_name']), None)
+
+    @staticmethod
+    def save_to_file(profile, file_path):
+        """ Save the profile to a file. """
+        directory = os.path.dirname(file_path)
+        if not os.path.isdir(directory):
+            os.makedirs(directory, exist_ok=True)
+        with open(file_path, 'w') as file:
+            json.dump(profile.as_dict(), file, indent=4)
+
+    @staticmethod
+    def display_edit_menu(profile_dict):
+        """ Display the edit menu for the profile. """
+        print('What you want to edit: ')
+        for index, (key, _) in enumerate(profile_dict.items(), start=1):
+            print(f'{index}. {key.replace("_", " ").upper()}')
+        print('9. Finish editing')
+
+    def update_profile(self, original_profile_name, profile_dict):
+        """ Update the profile with new data. """
+        new_profile = Profile(**profile_dict)
+        self.save_to_file(new_profile, os.path.join('profiles', f'{new_profile.profile_name}.json'))
+        if original_profile_name != new_profile.profile_name:
+            old_file_path = os.path.join('profiles', f'{original_profile_name}.json')
+            if os.path.exists(old_file_path):
+                os.remove(old_file_path)
+        self.profiles = self.load_profiles()
+
+    @staticmethod
+    def get_openai_api_key_from_user():
+        """ Get OpenAI API key from the user. """
+        while True:
+            openai_api_key = stdiomask.getpass(prompt='Enter your OpenAI API key: ')
+            if (len(openai_api_key) == 51
+                    and openai_api_key[:3] == 'sk-'
+                    and openai_api_key[3:].isalnum()):
+                return openai_api_key
+            else:
+                print('Invalid API Key format. It should start with "sk-" and have 48 alphanumeric characters.')
+
+    @staticmethod
+    def select_model():
+        """ Select GPT model from the list of available models."""
+        while True:
+            print('Select GPT model:')
+            for index, model in enumerate(openai_models):
+                print(f'{index}. {model}')
+            choice = input(f'(0-{len(openai_models) - 1}) >>>> ')
+            if choice.isdigit() and int(choice) in range(len(openai_models)):
+                return openai_models[int(choice)]
+            else:
+                print(f'Invalid choice. Please enter a number between 0 and {len(openai_models) - 1}.')
+
+    def save_current_profile(self, profile_name):
+        """ Save the current profile information to settings.json file. """
+        with open(self.settings_file, 'w') as file:
+            json.dump({'current_profile': profile_name}, file)
+
+    def display_profile_info(self):
+        """ Display the current profile information. """
+        if not self.profile:
+            print(f'>>>>> Current profile: NO PROFILE SELECTED <<<<<')
+        else:
+            print(f'>>>>> Current profile: {self.profile}] <<<<<')
+
+    def determine_current_profile(self):
+        if not os.path.exists(self.settings_file):
+            return None
+        with open(self.settings_file, 'r') as file:
+            settings = json.load(file)
+        current_profile_name = settings.get('current_profile')
+        return next((profile for profile in self.profiles if profile.profile_name == current_profile_name), None)
+
+
+class ProfileValidations:
+    """ Class responsible for validating profiles. """
+
+    @staticmethod
+    def is_unique_profile_name(profiles, profile_name):
+        """ Check if the profile name is unique. """
+        return not any(profile.profile_name == profile_name for profile in profiles)
+
+    @staticmethod
+    def is_valid_profile_file(data):
+        """ Validate if file is a valid profile file. """
+        requires_fields = ['profile_name', 'openai_api_key', 'gpt_model']
+        return all(field in data for field in requires_fields)
+        pass
+
+    def validate_profile(self, profile):
+        """ Validate the profile. """
+        validation_errors = {}
+        if not self.is_valid_openai_api_key(profile.openai_api_key):
+            validation_errors['openai_api_key'] = 'Invalid or no OpenAI API Key selected'
+        if not self.is_valid_gpt_model(profile.gpt_model):
+            validation_errors['gpt_model'] = 'Invalid or no GPT model selected'
+        return validation_errors
+
+    @staticmethod
+    def is_valid_openai_api_key(openai_api_key):
+        return len(openai_api_key) == 51 and openai_api_key.startswith('sk-') and openai_api_key[3:].isalnum()
+
+    @staticmethod
+    def is_valid_gpt_model(gpt_model):
+        return gpt_model in openai_models
