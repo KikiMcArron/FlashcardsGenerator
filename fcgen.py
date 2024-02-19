@@ -5,6 +5,13 @@ import stdiomask
 
 from data import *
 
+clear_command = 'cls' if os.name == 'nt' else 'clear'
+
+
+def clear_screen():
+    """ Clear the screen. """
+    os.system(clear_command)
+
 
 class Application:
     """ Main class of the application. It is responsible for managing the flow of the application. """
@@ -34,7 +41,7 @@ class Application:
 
     def main(self):
         """ Main loop for the application. """
-        Tools.clear_screen()
+        clear_screen()
         while True:
             self.profile_manager.display_profile_info()
             print('What you want to do?')
@@ -71,7 +78,7 @@ class StageAndModuleHandler:
         else:
             print(f'Invalid stage: {new_stage}.')
             input('Press Enter to continue...')
-            Tools.clear_screen()
+            clear_screen()
 
 
 class UserInputHandler:
@@ -92,22 +99,12 @@ class UserInputHandler:
         else:
             print(f'Option {user_input} is not available.')
             input('Press Enter to continue...')
-            Tools.clear_screen()
+            clear_screen()
 
     def input_to_action_key(self):
         """ Convert user input to action key. """
         menu_items_dict = module_menus[self.app_inst.current_module]
         return {v: k for k, v in menu_items_dict.items()}
-
-
-class Tools:
-    """ Class with tools for the application. """
-    clear_command = 'cls' if os.name == 'nt' else 'clear'
-
-    @staticmethod
-    def clear_screen():
-        """ Clear the screen. """
-        os.system(Tools.clear_command)
 
 
 class Menu:
@@ -163,20 +160,13 @@ class Profile:
             'gpt_model': self.gpt_model
         }
 
-    def save_to_file(self, file_path):
-        """ Save the profile to a file. """
-        directory = os.path.dirname(file_path)
-        if not os.path.isdir(directory):
-            os.makedirs(directory, exist_ok=True)
-        with open(file_path, 'w') as file:
-            json.dump(self.as_dict(), file, indent=4)
-
 
 class ProfileManager:
     """ Class responsible for managing profiles. """
 
-    def __init__(self, profiles_dir='profiles'):
+    def __init__(self, profiles_dir='profiles', settings_file='settings.json'):
         """ Initialize the profile manager. """
+        self.settings_file = settings_file
         self.profiles_dir = profiles_dir
         self.profiles = self.load_profiles()
         self.profile = self.determine_current_profile()
@@ -193,13 +183,9 @@ class ProfileManager:
                 with open(file_path, 'r') as file:
                     try:
                         profile_data = json.load(file)
-                        if self.validate_profile_files(profile_data):
+                        if self.is_valid_profile_file(profile_data):
                             profile = Profile(**profile_data)
                             profiles.append(profile)
-                        # else:
-                        #     # TODO: Do I need this message? Maybe not displaying invalid profiles is enough
-                        #     print(f'Invalid profile data in file "{file_path}".', flush=True)
-                        #     time.sleep(3)
                     except json.JSONDecodeError:
                         print(f'Error decoding JSON from file "{file_path}".')
         return profiles
@@ -213,39 +199,51 @@ class ProfileManager:
             choice = input(f'Select profile (1-{len(self.profiles)}) >>>> ')
             if choice.isdigit() and int(choice) in range(1, len(self.profiles) + 1):
                 self.profile = self.profiles[int(choice) - 1]
-                self.validate_profile_data(self.profile)
+                self.validate_profile(self.profile)
+                self.update_profile_if_needed(self.profile)
+                self.save_current_profile(self.profile.profile_name)
                 return self.profile
             else:
                 print(f'Invalid choice. Please enter a number between 1 and {len(self.profiles)}.')
 
+    def update_profile_if_needed(self, profile):
+        """ Update the profile if necessary. """
+        validation_errors = self.validate_profile(profile)
+        if 'openai_api_key' in validation_errors:
+            clear_screen()
+            print(validation_errors['openai_api_key'])
+            profile.openai_api_key = self.get_openai_api_key_from_user()
+            print(f'The OpenAI Key in profile "{profile.profile_name}" has been updated')
+        if 'gpt_model' in validation_errors:
+            clear_screen()
+            print(validation_errors['gpt_model'])
+            profile.gpt_model = self.select_model()
+            print(f'The GPT model in profile "{profile.profile_name}" has been updated')
+        self.save_to_file(profile, f'profiles/{profile.profile_name}.json')
+
     @staticmethod
-    def validate_profile_files(data):
+    def is_valid_profile_file(data):
         """ Validate if file is a valid profile file. """
         requires_fields = ['profile_name', 'openai_api_key', 'gpt_model']
-        if not all(field in data for field in requires_fields):
-            return False
-        return True
+        return all(field in data for field in requires_fields)
 
-    def validate_profile_data(self, profile):
+    def validate_profile(self, profile):
         """ Validate profile data and update it if necessary. """
-        profile_name = profile.profile_name
-        openai_api_key = profile.openai_api_key
-        gpt_model = profile.gpt_model
-        data_changed = False
-        if not (len(openai_api_key) == 51 and openai_api_key.startswith('sk-') and openai_api_key[3:].isalnum()):
-            Tools.clear_screen()
-            print(f'Invalid or no OpenAI API Key selected in profile "{profile_name}"')
-            profile.openai_api_key = self.get_openai_api_key_from_user()
-            data_changed = True
-            print(f'The OpenAI Key in profile "{profile_name}" has been updated')
-        if gpt_model == '' or gpt_model not in openai_models:
-            Tools.clear_screen()
-            print(f'Invalid or no GPT model selected for profile "{profile_name}"')
-            profile.gpt_model = self.select_model()
-            data_changed = True
-        if data_changed:
-            profile.save_to_file(f'profiles/{profile.profile_name}.json')
-            print(f'Profile "{profile.profile_name}" updated and saved.')
+        validation_errors = {}
+        if not self.is_valid_openai_api_key(profile.openai_api_key):
+            validation_errors['openai_api_key'] = (f'Invalid or no OpenAI API Key selected in profile '
+                                                   f'"{profile.profile_name}"')
+        if not self.is_valid_gpt_model(profile.gpt_model):
+            validation_errors['gpt_model'] = f'Invalid or no GPT model selected for profile "{profile.profile_name}"'
+        return validation_errors
+
+    @staticmethod
+    def is_valid_openai_api_key(openai_api_key):
+        return len(openai_api_key) == 51 and openai_api_key.startswith('sk-') and openai_api_key[3:].isalnum()
+
+    @staticmethod
+    def is_valid_gpt_model(gpt_model):
+        return gpt_model in openai_models
 
     def add_new_profile(self):
         """ Add a new profile. """
@@ -258,15 +256,16 @@ class ProfileManager:
         openai_api_key = self.get_openai_api_key_from_user()
         gpt_model = self.select_model()
         new_profile = Profile(profile_name, openai_api_key, gpt_model)
-        new_profile.save_to_file(f'profiles/{profile_name}.json')
+        self.save_to_file(new_profile, f'profiles/{profile_name}.json')
 
     def edit_profile(self):
         """ Edit a profile from the list of profiles."""
-        # TODO: After selecting a profile and then editing it, the data displayed in the profile information remains unchanged.
+        # TODO: After selecting a profile and then editing it, selected profile is changed to None (even if no
+        #  changes has been made).
         selected_profile = self.select_profile()
         profile_dict = selected_profile.as_dict()
         original_profile_name = selected_profile.profile_name
-        Tools.clear_screen()
+        clear_screen()
 
         options = {
             '1': ('profile_name', 'Enter new profile name: '),
@@ -275,7 +274,7 @@ class ProfileManager:
         }
 
         while True:
-            Tools.clear_screen()
+            clear_screen()
             self.display_edit_menu(profile_dict)
             choice = input('Select >>>>  ')
 
@@ -294,7 +293,17 @@ class ProfileManager:
                 print('Invalid choice. Please select 1-3 to edit selected element or 9 to finish editing.')
 
         self.update_profile(original_profile_name, profile_dict)
-        self.profile = self.determine_current_profile()
+        if self.profile and self.profile.profile_name == original_profile_name:
+            self.profile = next((profile for profile in self.profiles if profile.profile_name == profile_dict['profile_name']), None)
+
+    @staticmethod
+    def save_to_file(profile, file_path):
+        """ Save the profile to a file. """
+        directory = os.path.dirname(file_path)
+        if not os.path.isdir(directory):
+            os.makedirs(directory, exist_ok=True)
+        with open(file_path, 'w') as file:
+            json.dump(profile.as_dict(), file, indent=4)
 
     @staticmethod
     def display_edit_menu(profile_dict):
@@ -311,7 +320,7 @@ class ProfileManager:
     def update_profile(self, original_profile_name, profile_dict):
         """ Update the profile with new data. """
         new_profile = Profile(**profile_dict)
-        new_profile.save_to_file(os.path.join('profiles', f'{new_profile.profile_name}.json'))
+        self.save_to_file(new_profile, os.path.join('profiles', f'{new_profile.profile_name}.json'))
         if original_profile_name != new_profile.profile_name:
             old_file_path = os.path.join('profiles', f'{original_profile_name}.json')
             if os.path.exists(old_file_path):
@@ -343,9 +352,10 @@ class ProfileManager:
             else:
                 print(f'Invalid choice. Please enter a number between 0 and {len(openai_models) - 1}.')
 
-    def save_current_profile(self):
-        """ Save the current profile information to env.json file. """
-        pass
+    def save_current_profile(self, profile_name):
+        """ Save the current profile information to settings.json file. """
+        with open(self.settings_file, 'w') as file:
+            json.dump({'current_profile': profile_name}, file)
 
     def display_profile_info(self):
         """ Display the current profile information. """
@@ -355,7 +365,12 @@ class ProfileManager:
             print(f'>>>>> Current profile: {self.profile}] <<<<<')
 
     def determine_current_profile(self):
-        return None
+        if not os.path.exists(self.settings_file):
+            return None
+        with open(self.settings_file, 'r') as file:
+            settings = json.load(file)
+        current_profile_name = settings.get('current_profile')
+        return next((profile for profile in self.profiles if profile.profile_name == current_profile_name), None)
 
 
 class Action:
@@ -369,7 +384,8 @@ class Action:
         """ Execute the action """
         raise NotImplementedError("Subclasses should implement this!")
 
-    def log(self, message):
+    @staticmethod
+    def log(message):
         """ Log a message. """
         print(f'[LOG] {message}')
 
@@ -384,14 +400,14 @@ class AddNewProfile(Action):
 
     def execute(self):
         """ Execute the action """
-        Tools.clear_screen()
+        clear_screen()
         self.log('Adding a new profile...')
 
         self.profile_manager.add_new_profile()
 
         print('New profile added.')
         input('Press Enter to continue...')
-        Tools.clear_screen()
+        clear_screen()
         profiles = self.profile_manager.load_profiles()
         if profiles and not self.profile_manager.profile:
             self.app_inst.stage_and_module_handler.change_stage('no_profile_selected')
@@ -407,14 +423,14 @@ class SelectProfile(Action):
 
     def execute(self):
         """ Execute the action """
-        Tools.clear_screen()
+        clear_screen()
         self.log('Profile selection...')
 
         profile = self.profile_manager.select_profile()
 
         print(f'Profile: {profile} selected.')
         input('Press Enter to continue...')
-        Tools.clear_screen()
+        clear_screen()
         self.app_inst.stage_and_module_handler.change_stage('profile_selected')
 
 
@@ -428,13 +444,13 @@ class EditProfile(Action):
 
     def execute(self):
         """ Execute the action """
-        Tools.clear_screen()
+        clear_screen()
         self.log('Profile editing...')
         print('Which profile you want to edit?')
         self.profile_manager.edit_profile()
         print('Profile edited.')
         input('Press Enter to continue...')
-        Tools.clear_screen()
+        clear_screen()
 
 
 class ExitProgram(Action):
@@ -447,19 +463,19 @@ class ExitProgram(Action):
 
     def execute(self):
         """ Execute the action """
-        Tools.clear_screen()
+        clear_screen()
         while True:
             answer = input('Are you sure you want to close this application? (Y/N) ')
             if answer.upper() == 'Y':
-                Tools.clear_screen()
+                clear_screen()
                 sys.exit()
             if answer.upper() == 'N':
-                Tools.clear_screen()
+                clear_screen()
                 break
             else:
                 print('Invalid answer, select "Y" or "N".')
                 input('Press Enter to continue...')
-                Tools.clear_screen()
+                clear_screen()
                 pass
 
 
