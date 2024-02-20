@@ -18,8 +18,8 @@ class Application:
         """ Initialize the application. """
         self.current_module = None
         self.current_stage = None
-        self.current_profile = None
         self.profile_manager = ProfileManager()
+        self.current_profile = self.profile_manager.current_profile
         self.stage_and_module_handler = StageAndModuleHandler(self)
         self.user_input_handler = UserInputHandler(self)
         self.stage_and_module_handler.determine_current_stage()
@@ -62,6 +62,8 @@ class StageAndModuleHandler:
             self.set_current_stage('profile', 'initiation')
         elif not self.app_inst.current_profile:
             self.set_current_stage('profile', 'no_profile_selected')
+        elif self.app_inst.current_profile:
+            self.set_current_stage('profile', 'profile_selected')
 
     def set_current_stage(self, module, stage):
         """ Set the current stage of the application. """
@@ -172,7 +174,7 @@ class AddNewProfile(Action):
         input('Press Enter to continue...')
         clear_screen()
         profiles = self.profile_manager.load_profiles()
-        if profiles and not self.profile_manager.profile:
+        if profiles and not self.profile_manager.current_profile:
             self.app_inst.stage_and_module_handler.change_stage('no_profile_selected')
 
 
@@ -189,7 +191,7 @@ class SelectProfile(Action):
         clear_screen()
         self.log('Profile selection...')
 
-        profile = self.profile_manager.select_profile()
+        profile = self.profile_manager.select_current_profile()
 
         print(f'Profile: {profile} selected.')
         input('Press Enter to continue...')
