@@ -9,18 +9,18 @@ from fcgen import clear_screen
 class Profile:
     """ Class representing a profile. """
 
-    def __init__(self, profile_name=None, openai_api_key=None, gpt_model=None):
+    def __init__(self, profile_name=None, openai_api_key=None, gpt_model=None) -> None:
         """ Initialize the profile. """
         self.profile_name = profile_name
         self.openai_api_key = openai_api_key
         self.gpt_model = gpt_model
 
-    def __str__(self):
+    def __str__(self) -> str:
         """ Return a string representation of the profile. """
         return (f'{self.profile_name} (OpenAI API Key: sk-...{self.openai_api_key[-4:]}, GPT Model: '
                 f'{self.gpt_model})')
 
-    def as_dict(self):
+    def as_dict(self) -> dict:
         """ Return the profile as a dictionary. """
         return {
             'profile_name': self.profile_name,
@@ -32,7 +32,7 @@ class Profile:
 class ProfileManager:
     """ Class responsible for managing profiles. """
 
-    def __init__(self, profiles_dir='profiles', settings_file='settings.json'):
+    def __init__(self, profiles_dir='profiles', settings_file='settings.json') -> None:
         """ Initialize the profile manager. """
         self.validator = ProfileValidations()
         self.ui_handler = ProfileUIHandler()
@@ -41,14 +41,14 @@ class ProfileManager:
         self.profiles = self.load_profiles()
         self.current_profile = self.determine_current_profile()
 
-    def display_profile_info(self):
+    def display_profile_info(self) -> None:
         """ Display the current profile information. """
         if not self.current_profile:
             print(f'>>>>> Current profile: NO PROFILE SELECTED <<<<<')
         else:
             print(f'>>>>> Current profile: {self.current_profile}] <<<<<')
 
-    def load_profiles(self):
+    def load_profiles(self) -> list:
         """ Load profiles from files. """
         self.validator.ensure_dir_exists(self.profiles_dir)
         profiles = []
@@ -65,7 +65,7 @@ class ProfileManager:
                         print(f'Error decoding JSON from file "{file_path}".')
         return profiles
 
-    def select_current_profile(self):
+    def select_current_profile(self) -> None:
         """ Select a profile from the list of profiles. """
         self.profiles = self.load_profiles()
         self.current_profile = self.ui_handler.profile_selection(self.profiles)
@@ -73,7 +73,7 @@ class ProfileManager:
         self.update_profile_if_needed(self.current_profile)
         self.save_current_profile(self.current_profile.profile_name)
 
-    def update_profile_if_needed(self, profile):
+    def update_profile_if_needed(self, profile) -> None:
         """ Update the profile if necessary. """
         validation_errors = self.validator.validate_profile(profile)
 
@@ -90,7 +90,7 @@ class ProfileManager:
             print(f'The GPT model in profile "{profile.profile_name}" has been updated')
         self.save_to_file(profile, f'profiles/{profile.profile_name}.json')
 
-    def add_new_profile(self):
+    def add_new_profile(self) -> None:
         """ Add a new profile. """
         while True:
             profile_name = input('Enter your new profile name: ')
@@ -104,7 +104,7 @@ class ProfileManager:
         new_profile = Profile(profile_name, openai_api_key, gpt_model)
         self.save_to_file(new_profile, f'profiles/{profile_name}.json')
 
-    def edit_profile(self):
+    def edit_profile(self) -> None:
         """ Edit a profile from the list of profiles."""
         # TODO: After selecting a profile and then editing it, selected profile is changed to None (even if no
         #  changes has been made).
@@ -144,14 +144,14 @@ class ProfileManager:
             self.current_profile = next(
                 (profile for profile in self.profiles if profile.profile_name == profile_dict['profile_name']), None)
 
-    def save_to_file(self, profile, file_path):
+    def save_to_file(self, profile, file_path) -> None:
         """ Save the profile to a file. """
         directory = os.path.dirname(file_path)
         self.validator.ensure_dir_exists(directory)
         with open(file_path, 'w') as file:
             json.dump(profile.as_dict(), file, indent=4)
 
-    def update_profile(self, original_profile_name, profile_dict):
+    def update_profile(self, original_profile_name, profile_dict) -> None:
         """ Update the profile with new data. """
         new_profile = Profile(**profile_dict)
         self.save_to_file(new_profile, os.path.join('profiles', f'{new_profile.profile_name}.json'))
@@ -161,12 +161,12 @@ class ProfileManager:
                 os.remove(old_file_path)
         self.profiles = self.load_profiles()
 
-    def save_current_profile(self, profile_name):
+    def save_current_profile(self, profile_name) -> None:
         """ Save the current profile information to settings.json file. """
         with open(self.settings_file, 'w') as file:
             json.dump({'current_profile': profile_name}, file)
 
-    def determine_current_profile(self):
+    def determine_current_profile(self) -> Profile:
         if not os.path.exists(self.settings_file):
             return None
         with open(self.settings_file, 'r') as file:
@@ -178,12 +178,12 @@ class ProfileManager:
 class ProfileUIHandler:
     """ Class responsible for handling the profile UI. """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """ Initialize the handler. """
 
     pass
 
-    def profile_selection(self, profiles):
+    def profile_selection(self, profiles) -> Profile:
         """ Select a profile from the list of profiles. """
         self.profile_selection_menu(profiles)
         while True:
@@ -194,7 +194,7 @@ class ProfileUIHandler:
                 print(f'Invalid choice. Please enter a number between 1 and {len(profiles)}')
 
     @staticmethod
-    def profile_selection_menu(profiles):
+    def profile_selection_menu(profiles) -> None:
         """ Display the profile selection menu. """
         print('Select profile: ')
         for index, profile in enumerate(profiles, start=1):
@@ -202,7 +202,7 @@ class ProfileUIHandler:
         # TODO Add option: print('9. Back to previews menu')
 
     @staticmethod
-    def get_openai_api_key_from_user():
+    def get_openai_api_key_from_user() -> str:
         """ Get OpenAI API key from the user. """
         while True:
             openai_api_key = stdiomask.getpass(prompt='Enter your OpenAI API key: ')
@@ -214,7 +214,7 @@ class ProfileUIHandler:
                 print('Invalid API Key format. It should start with "sk-" and have 48 alphanumeric characters.')
 
     @staticmethod
-    def display_edit_menu(profile_dict):
+    def display_edit_menu(profile_dict) -> None:
         """ Display the edit menu for the profile. """
         print('What you want to edit: ')
         for index, (key, _) in enumerate(profile_dict.items(), start=1):
@@ -222,7 +222,7 @@ class ProfileUIHandler:
         print('9. Finish editing')
 
     @staticmethod
-    def select_model():
+    def select_model() -> str:
         """ Select GPT model from the list of available models."""
         while True:
             print('Select GPT model:')
@@ -239,24 +239,24 @@ class ProfileValidations:
     """ Class responsible for validating profiles. """
 
     @staticmethod
-    def ensure_dir_exists(directory):
+    def ensure_dir_exists(directory) -> None:
         """ Ensure that the directory exists. """
         if not os.path.exists(directory):
             os.makedirs(directory, exist_ok=True)
 
     @staticmethod
-    def is_unique_profile_name(profiles, profile_name):
+    def is_unique_profile_name(profiles, profile_name) -> bool:
         """ Check if the profile name is unique. """
         return not any(profile.profile_name == profile_name for profile in profiles)
 
     @staticmethod
-    def is_valid_profile_file(data):
+    def is_valid_profile_file(data) -> bool:
         """ Validate if file is a valid profile file. """
         requires_fields = ['profile_name', 'openai_api_key', 'gpt_model']
         return all(field in data for field in requires_fields)
         pass
 
-    def validate_profile(self, profile):
+    def validate_profile(self, profile) -> dict:
         """ Validate the profile. """
         validation_errors = {}
         if not self.is_valid_openai_api_key(profile.openai_api_key):
@@ -266,9 +266,9 @@ class ProfileValidations:
         return validation_errors
 
     @staticmethod
-    def is_valid_openai_api_key(openai_api_key):
+    def is_valid_openai_api_key(openai_api_key) -> bool:
         return len(openai_api_key) == 51 and openai_api_key.startswith('sk-') and openai_api_key[3:].isalnum()
 
     @staticmethod
-    def is_valid_gpt_model(gpt_model):
+    def is_valid_gpt_model(gpt_model) -> bool:
         return gpt_model in openai_models

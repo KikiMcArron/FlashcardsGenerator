@@ -6,7 +6,7 @@ from profile_module import *
 clear_command = 'cls' if os.name == 'nt' else 'clear'
 
 
-def clear_screen():
+def clear_screen() -> None:
     """ Clear the screen. """
     os.system(clear_command)
 
@@ -14,7 +14,7 @@ def clear_screen():
 class Application:
     """ Main class of the application. It is responsible for managing the flow of the application. """
 
-    def __init__(self):
+    def __init__(self)  -> None:
         """ Initialize the application. """
         self.current_module = None
         self.current_stage = None
@@ -37,7 +37,7 @@ class Application:
             'exit': ExitProgram(self, self.profile_manager)
         }
 
-    def main(self):
+    def main(self) -> None:
         """ Main loop for the application. """
         clear_screen()
         while True:
@@ -52,11 +52,11 @@ class Application:
 class StageAndModuleHandler:
     """ Class responsible for managing the current stage and module of the application. """
 
-    def __init__(self, app_inst):
+    def __init__(self, app_inst) -> None:
         """ Initialize the handler. """
         self.app_inst = app_inst
 
-    def determine_current_stage(self):
+    def determine_current_stage(self) -> None:
         """ Determine the current stage of the application. """
         if not self.app_inst.profile_manager.profiles:
             self.set_current_stage('profile', 'initiation')
@@ -65,12 +65,12 @@ class StageAndModuleHandler:
         elif self.app_inst.current_profile:
             self.set_current_stage('profile', 'profile_selected')
 
-    def set_current_stage(self, module, stage):
+    def set_current_stage(self, module, stage) -> None:
         """ Set the current stage of the application. """
         self.app_inst.current_module = module
         self.app_inst.current_stage = stage
 
-    def change_stage(self, new_stage):
+    def change_stage(self, new_stage) -> None:
         """ Change the current stage of the application. """
         if new_stage in stages:
             self.app_inst.current_stage = new_stage
@@ -84,11 +84,11 @@ class StageAndModuleHandler:
 class UserInputHandler:
     """ Class responsible for handling user input. """
 
-    def __init__(self, app_inst):
+    def __init__(self, app_inst) -> None:
         """ Initialize the handler. """
         self.app_inst = app_inst
 
-    def handle_user_input(self, user_input):
+    def handle_user_input(self, user_input) -> None:
         """ Handle user input. """
         input_to_action_key = self.input_to_action_key()
         user_action_key = next((k for k, v in input_to_action_key.items() if k.startswith(user_input)), None)
@@ -101,7 +101,7 @@ class UserInputHandler:
             input('Press Enter to continue...')
             clear_screen()
 
-    def input_to_action_key(self):
+    def input_to_action_key(self) -> dict:
         """ Convert user input to action key. """
         menu_items_dict = module_menus[self.app_inst.current_module]
         return {v: k for k, v in menu_items_dict.items()}
@@ -110,27 +110,27 @@ class UserInputHandler:
 class Menu:
     """ Class responsible for managing the menu of the application. """
 
-    def __init__(self, current_module: str, current_stage: str):
+    def __init__(self, current_module: str, current_stage: str) -> None:
         """ Initialize the menu. """
         self.current_module = current_module
         self.current_stage = current_stage
         self.items = self.get_menu_items()
 
-    def get_menu_items(self):
+    def get_menu_items(self) -> list:
         """ Get menu items for the current stage and module. """
         menu_items_dict = module_menus[self.current_module]
         return [menu_items_dict[item_id] for item_id in stages[self.current_stage]]
 
-    def display_menu(self):
+    def display_menu(self) -> None:
         """ Display the menu. """
         for item in self.items:
             print(item)
 
-    def needs_update(self, new_module, new_stage):
+    def needs_update(self, new_module, new_stage) -> bool:
         """ Check if the menu needs to be updated. """
         return new_module != self.current_module or new_stage != self.current_stage
 
-    def update(self, new_module, new_stage):
+    def update(self, new_module, new_stage) -> None:
         """ Update the menu. """
         if self.needs_update(new_module, new_stage):
             self.current_module = new_module
@@ -141,16 +141,16 @@ class Menu:
 class Action:
     """ Class representing an action. """
 
-    def __init__(self, app_inst):
+    def __init__(self, app_inst) -> None:
         """ Initialize the action. """
         self.app_inst = app_inst
 
-    def execute(self):
+    def execute(self) -> None:
         """ Execute the action """
         raise NotImplementedError("Subclasses should implement this!")
 
     @staticmethod
-    def log(message):
+    def log(message) -> None:
         """ Log a message. """
         print(f'[LOG] {message}')
 
@@ -158,12 +158,12 @@ class Action:
 class AddNewProfile(Action):
     """ Class representing an action of adding a new profile. """
 
-    def __init__(self, app_inst, profile_manager):
+    def __init__(self, app_inst, profile_manager) -> None:
         """ Initialize the action. """
         super().__init__(app_inst)
         self.profile_manager = profile_manager
 
-    def execute(self):
+    def execute(self) -> None:
         """ Execute the action """
         clear_screen()
         self.log('Adding a new profile...')
@@ -181,12 +181,12 @@ class AddNewProfile(Action):
 class SelectProfile(Action):
     """ Class representing an action of selecting a profile. """
 
-    def __init__(self, app_inst, profile_manager):
+    def __init__(self, app_inst, profile_manager) -> None:
         """ Initialize the action. """
         super().__init__(app_inst)
         self.profile_manager = profile_manager
 
-    def execute(self):
+    def execute(self) -> None:
         """ Execute the action """
         clear_screen()
         self.log('Profile selection...')
@@ -202,12 +202,12 @@ class SelectProfile(Action):
 class EditProfile(Action):
     """ Class representing an action of editing a profile. """
 
-    def __init__(self, app_inst, profile_manager):
+    def __init__(self, app_inst, profile_manager) -> None:
         """ Initialize the action. """
         super().__init__(app_inst)
         self.profile_manager = profile_manager
 
-    def execute(self):
+    def execute(self) -> None:
         """ Execute the action """
         clear_screen()
         self.log('Profile editing...')
@@ -221,12 +221,12 @@ class EditProfile(Action):
 class ExitProgram(Action):
     """ Class representing an action of exiting the program. """
 
-    def __init__(self, app_inst, profile_manager):
+    def __init__(self, app_inst, profile_manager) -> None:
         """ Initialize the action. """
         super().__init__(app_inst)
         self.profile_manager = profile_manager
 
-    def execute(self):
+    def execute(self) -> None:
         """ Execute the action """
         clear_screen()
         while True:
@@ -244,7 +244,7 @@ class ExitProgram(Action):
                 pass
 
 
-def run_application():
+def run_application() -> None:
     """ Create an application instance and run it. """
     app = Application()
     app.main()
