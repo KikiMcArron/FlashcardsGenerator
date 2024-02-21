@@ -14,7 +14,7 @@ def clear_screen() -> None:
 class Application:
     """ Main class of the application. It is responsible for managing the flow of the application. """
 
-    def __init__(self)  -> None:
+    def __init__(self) -> None:
         """ Initialize the application. """
         self.current_module = None
         self.current_stage = None
@@ -193,7 +193,7 @@ class SelectProfile(Action):
 
         profile = self.profile_manager.select_current_profile()
 
-        print(f'Profile: {profile} selected.')
+        print(f'Profile "{profile.profile_name}" selected.')
         input('Press Enter to continue...')
         clear_screen()
         self.app_inst.stage_and_module_handler.change_stage('profile_selected')

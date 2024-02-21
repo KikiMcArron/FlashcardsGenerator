@@ -6,6 +6,10 @@ from data import openai_models
 from fcgen import clear_screen
 
 
+# TODO: Add encryption for profile files
+# TODO: Add logging
+
+
 class Profile:
     """ Class representing a profile. """
 
@@ -65,13 +69,14 @@ class ProfileManager:
                         print(f'Error decoding JSON from file "{file_path}".')
         return profiles
 
-    def select_current_profile(self) -> None:
+    def select_current_profile(self) -> Profile:
         """ Select a profile from the list of profiles. """
         self.profiles = self.load_profiles()
         self.current_profile = self.ui_handler.profile_selection(self.profiles)
         self.validator.validate_profile(self.current_profile)
         self.update_profile_if_needed(self.current_profile)
         self.save_current_profile(self.current_profile.profile_name)
+        return self.current_profile
 
     def update_profile_if_needed(self, profile) -> None:
         """ Update the profile if necessary. """
@@ -106,17 +111,15 @@ class ProfileManager:
 
     def edit_profile(self) -> None:
         """ Edit a profile from the list of profiles."""
-        # TODO: After selecting a profile and then editing it, selected profile is changed to None (even if no
-        #  changes has been made).
         profile = self.ui_handler.profile_selection(self.profiles)
         profile_dict = profile.as_dict()
         original_profile_name = profile.profile_name
         clear_screen()
 
         options = {
-            '1': ('profile_name', 'Enter new profile name: '),
-            '2': ('openai_api_key', self.ui_handler.get_openai_api_key_from_user),
-            '3': ('gpt_model', self.ui_handler.select_model)
+            '1': ('profile_name', 'Enter new profile name: ', 'Profile name has been updated'),
+            '2': ('openai_api_key', self.ui_handler.get_openai_api_key_from_user, 'OpenAI API Key has been updated'),
+            '3': ('gpt_model', self.ui_handler.select_model, 'GPT model has been updated')
         }
 
         while True:
@@ -125,11 +128,17 @@ class ProfileManager:
             choice = input('Select >>>>  ')
 
             if choice in options:
-                field, handler = options[choice]
+                field, handler, message = options[choice]
                 if callable(handler):
+                    clear_screen()
                     profile_dict[field] = handler()
+                    print(message)
+                    input('Press Enter to continue...')
                 else:
+                    clear_screen()
                     profile_dict[field] = input(handler)
+                    print(message)
+                    input('Press Enter to continue...')
                 if field == 'profile_name' and not self.validator.is_unique_profile_name(self.profiles,
                                                                                          profile_dict[field]):
                     print(f'Profile {profile_dict[field]} already exists. Please choose a different name.')
@@ -143,6 +152,7 @@ class ProfileManager:
         if self.current_profile and self.current_profile.profile_name == original_profile_name:
             self.current_profile = next(
                 (profile for profile in self.profiles if profile.profile_name == profile_dict['profile_name']), None)
+            self.save_current_profile(self.current_profile.profile_name)
 
     def save_to_file(self, profile, file_path) -> None:
         """ Save the profile to a file. """
@@ -226,13 +236,13 @@ class ProfileUIHandler:
         """ Select GPT model from the list of available models."""
         while True:
             print('Select GPT model:')
-            for index, model in enumerate(openai_models):
+            for index, model in enumerate(openai_models, start=1):
                 print(f'{index}. {model}')
-            choice = input(f'(0-{len(openai_models) - 1}) >>>> ')
-            if choice.isdigit() and int(choice) in range(len(openai_models)):
-                return openai_models[int(choice)]
+            choice = input(f'(1-{len(openai_models)}) >>>> ')
+            if choice.isdigit() and int(choice) in range(1, len(openai_models) + 1):
+                return openai_models[int(choice) - 1]
             else:
-                print(f'Invalid choice. Please enter a number between 0 and {len(openai_models) - 1}.')
+                print(f'Invalid choice. Please enter a number between 1 and {len(openai_models)}.')
 
 
 class ProfileValidations:
