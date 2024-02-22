@@ -1,3 +1,5 @@
+# Module responsible for managing profiles.
+
 import os
 import json
 import stdiomask
@@ -45,10 +47,18 @@ class ProfileManager:
         self.profiles = self.load_profiles()
         self.current_profile = self.determine_current_profile()
 
+    def determine_current_profile(self) -> Profile:
+        if not os.path.exists(self.settings_file):
+            return None
+        with open(self.settings_file, 'r') as file:
+            settings = json.load(file)
+        current_profile_name = settings.get('current_profile')
+        return next((profile for profile in self.profiles if profile.profile_name == current_profile_name), None)
+
     def display_profile_info(self) -> None:
         """ Display the current profile information. """
         if not self.current_profile:
-            print(f'>>>>> Current profile: NO PROFILE SELECTED <<<<<')
+            print('>>>>> Current profile: NO PROFILE SELECTED <<<<<')
         else:
             print(f'>>>>> Current profile: {self.current_profile}] <<<<<')
 
@@ -173,16 +183,16 @@ class ProfileManager:
 
     def save_current_profile(self, profile_name) -> None:
         """ Save the current profile information to settings.json file. """
-        with open(self.settings_file, 'w') as file:
-            json.dump({'current_profile': profile_name}, file)
+        try:
+            with open(self.settings_file, 'r') as file:
+                settings = json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError):
+            settings = {}
 
-    def determine_current_profile(self) -> Profile:
-        if not os.path.exists(self.settings_file):
-            return None
-        with open(self.settings_file, 'r') as file:
-            settings = json.load(file)
-        current_profile_name = settings.get('current_profile')
-        return next((profile for profile in self.profiles if profile.profile_name == current_profile_name), None)
+        settings['current_profile'] = profile_name
+
+        with open(self.settings_file, 'w') as file:
+            json.dump(settings, file, indent=4)
 
 
 class ProfileUIHandler:

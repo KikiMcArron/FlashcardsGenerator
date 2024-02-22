@@ -2,6 +2,7 @@ import sys
 
 from data import *
 from profile_module import *
+from source_module import *
 
 clear_command = 'cls' if os.name == 'nt' else 'clear'
 
@@ -19,6 +20,7 @@ class Application:
         self.current_module = None
         self.current_stage = None
         self.profile_manager = ProfileManager()
+        self.source_manager = SourceManager()
         self.current_profile = self.profile_manager.current_profile
         self.stage_and_module_handler = StageAndModuleHandler(self)
         self.user_input_handler = UserInputHandler(self)
@@ -28,12 +30,12 @@ class Application:
             'new_profile': AddNewProfile(self, self.profile_manager),
             'select_profile': SelectProfile(self, self.profile_manager),
             'edit_profile': EditProfile(self, self.profile_manager),
-            # 'select_source': '',
+            'select_source_note': SelectSource(self),
             # 'source_notion': '',
             # 'source_pdf': '',
             # 'source_txt': '',
             # 'generate_cards': '',
-            # 'profile_menu': '',
+            'profile_menu': BackToProfileMenu(self),
             'exit': ExitProgram(self, self.profile_manager)
         }
 
@@ -42,8 +44,9 @@ class Application:
         clear_screen()
         while True:
             self.profile_manager.display_profile_info()
-            print('What you want to do?')
             self.menu.update(self.current_module, self.current_stage)
+            if self.current_module == 'source':
+                self.source_manager.display_source_info()
             self.menu.display_menu()
             user_input = input('>>>> ')
             self.user_input_handler.handle_user_input(user_input)
@@ -59,13 +62,13 @@ class StageAndModuleHandler:
     def determine_current_stage(self) -> None:
         """ Determine the current stage of the application. """
         if not self.app_inst.profile_manager.profiles:
-            self.set_current_stage('profile', 'initiation')
+            self.set_current_stage_and_module('profile', 'initiation')
         elif not self.app_inst.current_profile:
-            self.set_current_stage('profile', 'no_profile_selected')
+            self.set_current_stage_and_module('profile', 'no_profile_selected')
         elif self.app_inst.current_profile:
-            self.set_current_stage('profile', 'profile_selected')
+            self.set_current_stage_and_module('profile', 'profile_selected')
 
-    def set_current_stage(self, module, stage) -> None:
+    def set_current_stage_and_module(self, module, stage) -> None:
         """ Set the current stage of the application. """
         self.app_inst.current_module = module
         self.app_inst.current_stage = stage
@@ -123,6 +126,7 @@ class Menu:
 
     def display_menu(self) -> None:
         """ Display the menu. """
+        print('Select your next action:')
         for item in self.items:
             print(item)
 
@@ -216,6 +220,33 @@ class EditProfile(Action):
         print('Profile edited.')
         input('Press Enter to continue...')
         clear_screen()
+
+
+class SelectSource(Action):
+    """ Class representing an action of selecting a source. """
+
+    def __init__(self, app_inst) -> None:
+        """ Initialize the action. """
+        super().__init__(app_inst)
+
+    def execute(self) -> None:
+        """ Execute the action """
+        clear_screen()
+        self.app_inst.stage_and_module_handler.set_current_stage_and_module('source', 'no_note_selected')
+        # self.app_inst.stage_and_module_handler.change_stage('profile_selected')
+
+
+class BackToProfileMenu(Action):
+    """ Class representing an action of going back to the profile menu. """
+
+    def __init__(self, app_inst) -> None:
+        """ Initialize the action. """
+        super().__init__(app_inst)
+
+    def execute(self) -> None:
+        """ Execute the action """
+        clear_screen()
+        self.app_inst.stage_and_module_handler.set_current_stage_and_module('profile', 'profile_selected')
 
 
 class ExitProgram(Action):
