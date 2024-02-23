@@ -5,7 +5,7 @@ import json
 import stdiomask
 
 from data import openai_models
-from fcgen import clear_screen
+from tools import clear_screen
 
 
 # TODO: Add encryption for profile files
@@ -182,7 +182,7 @@ class ProfileManager:
         self.profiles = self.load_profiles()
 
     def save_current_profile(self, profile_name) -> None:
-        """ Save the current profile information to settings.json file. """
+        """ Save the current profile name to settings file. """
         try:
             with open(self.settings_file, 'r') as file:
                 settings = json.load(file)

@@ -1,10 +1,12 @@
 # Module responsible for managing sources of data.
 import json
-import os.path
+import tkinter as tk
+from tkinter import filedialog
+from tools import *
 
 
 class Source:
-    """ Class representing a source of data. """
+    """ Class representing a source note. """
 
     def __init__(self, source_type=None, note_name=None, source_path=None) -> None:
         """ Initialize the manager. """
@@ -51,3 +53,42 @@ class SourceManager:
             print('>>>>> Current source note: NO NOTE SELECTED <<<<<')
         else:
             print(f'>>>>> Current source note: {self.current_source} <<<<<')
+
+    def load_note(self):
+        """ Load a note. """
+        root = tk.Tk()
+        root.withdraw()
+        file_path = filedialog.askopenfilename()
+        if file_path:
+            file_name = os.path.basename(file_path)
+            file_type = os.path.splitext(file_name)[1]
+            self.current_source = Source(file_type, file_name, file_path)
+            self.save_current_source()
+            print(f'Note loaded: {self.current_source}')
+            input('Press Enter to continue...')
+            clear_screen()
+            self.open_note_with_default_app()
+
+    def save_current_source(self) -> None:
+        """ Save the current source to the settings file. """
+        try:
+            with open(self.settings_file, 'r') as file:
+                settings = json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError):
+            settings = {}
+
+        settings['current_source'] = self.current_source.as_dict()
+
+        with open(self.settings_file, 'w') as file:
+            json.dump(settings, file, indent=4)
+
+    def open_note_with_default_app(self) -> None:
+        """ Open the note with the default application. """
+        if not self.current_source:
+            print('No note selected.')
+            input('Press Enter to continue...')
+            return
+        try:
+            open_file(self.current_source.source_path)
+        except Exception as e:
+            print(f"Failed to open file: {e}")

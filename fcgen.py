@@ -1,15 +1,9 @@
 import sys
 
-from data import *
-from profile_module import *
-from source_module import *
-
-clear_command = 'cls' if os.name == 'nt' else 'clear'
-
-
-def clear_screen() -> None:
-    """ Clear the screen. """
-    os.system(clear_command)
+from data import module_menus, stages
+from profile_module import ProfileManager
+from source_module import SourceManager
+from tools import clear_screen
 
 
 class Application:
@@ -31,9 +25,8 @@ class Application:
             'select_profile': SelectProfile(self, self.profile_manager),
             'edit_profile': EditProfile(self, self.profile_manager),
             'select_source_note': SelectSource(self),
+            'source_file': SourceFile(self),
             # 'source_notion': '',
-            # 'source_pdf': '',
-            # 'source_txt': '',
             # 'generate_cards': '',
             'profile_menu': BackToProfileMenu(self),
             'exit': ExitProgram(self, self.profile_manager)
@@ -234,6 +227,20 @@ class SelectSource(Action):
         clear_screen()
         self.app_inst.stage_and_module_handler.set_current_stage_and_module('source', 'no_note_selected')
         # self.app_inst.stage_and_module_handler.change_stage('profile_selected')
+
+
+class SourceFile(Action):
+    """ Class representing an action of selecting a TXT file as a source. """
+
+    def __init__(self, app_inst) -> None:
+        """ Initialize the action. """
+        super().__init__(app_inst)
+
+    def execute(self) -> None:
+        """ Execute the action """
+        clear_screen()
+        self.app_inst.source_manager.load_note()
+        self.app_inst.stage_and_module_handler.set_current_stage_and_module('source', 'note_selected')
 
 
 class BackToProfileMenu(Action):
