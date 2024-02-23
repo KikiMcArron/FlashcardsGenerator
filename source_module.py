@@ -3,6 +3,7 @@ import json
 import tkinter as tk
 from tkinter import filedialog
 from tools import *
+from data import file_types
 
 
 class Source:
@@ -58,7 +59,7 @@ class SourceManager:
         """ Load a note. """
         root = tk.Tk()
         root.withdraw()
-        file_path = filedialog.askopenfilename()
+        file_path = filedialog.askopenfilename(filetypes=file_types)
         if file_path:
             file_name = os.path.basename(file_path)
             file_type = os.path.splitext(file_name)[1]
