@@ -16,6 +16,7 @@ class Application:
         self.profile_manager = ProfileManager()
         self.source_manager = SourceManager()
         self.current_profile = self.profile_manager.current_profile
+        self.current_source = self.source_manager.current_source
         self.stage_and_module_handler = StageAndModuleHandler(self)
         self.user_input_handler = UserInputHandler(self)
         self.stage_and_module_handler.determine_current_stage()
@@ -37,9 +38,8 @@ class Application:
         clear_screen()
         while True:
             self.profile_manager.display_profile_info()
+            self.source_manager.display_source_info()
             self.menu.update(self.current_module, self.current_stage)
-            if self.current_module == 'source':
-                self.source_manager.display_source_info()
             self.menu.display_menu()
             user_input = input('>>>> ')
             self.user_input_handler.handle_user_input(user_input)
@@ -58,8 +58,10 @@ class StageAndModuleHandler:
             self.set_current_stage_and_module('profile', 'initiation')
         elif not self.app_inst.current_profile:
             self.set_current_stage_and_module('profile', 'no_profile_selected')
-        elif self.app_inst.current_profile:
+        elif self.app_inst.current_profile and not self.app_inst.current_source:
             self.set_current_stage_and_module('profile', 'profile_selected')
+        elif self.app_inst.current_profile and self.app_inst.current_source:
+            self.set_current_stage_and_module('profile', 'note_selected_profile')
 
     def set_current_stage_and_module(self, module, stage) -> None:
         """ Set the current stage of the application. """
@@ -193,7 +195,10 @@ class SelectProfile(Action):
         print(f'Profile "{profile.profile_name}" selected.')
         input('Press Enter to continue...')
         clear_screen()
-        self.app_inst.stage_and_module_handler.change_stage('profile_selected')
+        if self.app_inst.current_source:
+            self.app_inst.stage_and_module_handler.change_stage('note_selected_profile')
+        else:
+            self.app_inst.stage_and_module_handler.change_stage('profile_selected')
 
 
 class EditProfile(Action):
@@ -225,12 +230,15 @@ class SelectSource(Action):
     def execute(self) -> None:
         """ Execute the action """
         clear_screen()
-        self.app_inst.stage_and_module_handler.set_current_stage_and_module('source', 'no_note_selected')
+        if self.app_inst.current_source:
+            self.app_inst.stage_and_module_handler.set_current_stage_and_module('source', 'note_selected_source')
+        else:
+            self.app_inst.stage_and_module_handler.set_current_stage_and_module('source', 'no_note_selected')
         # self.app_inst.stage_and_module_handler.change_stage('profile_selected')
 
 
 class SourceFile(Action):
-    """ Class representing an action of selecting a TXT file as a source. """
+    """ Class representing an action of selecting a TXT or PDF file as a source. """
 
     def __init__(self, app_inst) -> None:
         """ Initialize the action. """
@@ -239,8 +247,9 @@ class SourceFile(Action):
     def execute(self) -> None:
         """ Execute the action """
         clear_screen()
-        self.app_inst.source_manager.load_note()
-        self.app_inst.stage_and_module_handler.set_current_stage_and_module('source', 'note_selected')
+        self.app_inst.current_source = self.app_inst.source_manager.load_note()
+        if self.app_inst.current_source:
+            self.app_inst.stage_and_module_handler.set_current_stage_and_module('source', 'note_selected_source')
 
 
 class BackToProfileMenu(Action):
@@ -253,7 +262,10 @@ class BackToProfileMenu(Action):
     def execute(self) -> None:
         """ Execute the action """
         clear_screen()
-        self.app_inst.stage_and_module_handler.set_current_stage_and_module('profile', 'profile_selected')
+        if not self.app_inst.current_source:
+            self.app_inst.stage_and_module_handler.set_current_stage_and_module('profile', 'profile_selected')
+        elif self.app_inst.current_source:
+            self.app_inst.stage_and_module_handler.set_current_stage_and_module('profile', 'note_selected_profile')
 
 
 class ExitProgram(Action):

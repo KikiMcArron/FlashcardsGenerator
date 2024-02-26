@@ -2,7 +2,8 @@ profile_menu_items = {
     'new_profile': '1. Add new profile',
     'select_profile': '2. Select profile',
     'edit_profile': '3. Edit profile',
-    'select_source_note': '8. Select source note',
+    'select_source_note': '6. Select source note',
+    'generate_cards': '7. Generate flashcards',
     'exit': '9. Quit program'
 }
 
@@ -24,7 +25,9 @@ stages = {
     'no_profile_selected': ['new_profile', 'select_profile', 'edit_profile', 'exit'],
     'profile_selected': ['new_profile', 'select_profile', 'edit_profile', 'select_source_note', 'exit'],
     'no_note_selected': ['source_file', 'source_notion', 'profile_menu', 'exit'],
-    'note_selected': ['source_file', 'source_notion', 'generate_cards', 'profile_menu', 'exit']
+    'note_selected_profile': ['new_profile', 'select_profile', 'edit_profile', 'select_source_note', 'generate_cards',
+                              'exit'],
+    'note_selected_source': ['source_file', 'source_notion', 'generate_cards', 'profile_menu', 'exit']
 }
 
 openai_models = ["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4"]

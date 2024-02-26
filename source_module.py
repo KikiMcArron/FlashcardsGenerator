@@ -1,4 +1,5 @@
 # Module responsible for managing sources of data.
+
 import json
 import tkinter as tk
 from tkinter import filedialog
@@ -17,7 +18,7 @@ class Source:
 
     def __str__(self) -> str:
         """ Return a string representation of the source note. """
-        return f'{self.note_name} (Note type: {self.source_type}, note path: {self.source_path})'
+        return f'{self.note_name.split(sep=".")[0]} (Note type: {self.source_type}, Note path: {self.source_path})'
 
     def as_dict(self) -> dict:
         """ Return the source as a dictionary. """
@@ -33,7 +34,7 @@ class SourceManager:
 
     def __init__(self, settings_file='settings.json') -> None:
         """ Initialize the manager. """
-        self.current_source = None
+        # self.current_source = None
         self.settings_file = settings_file
         self.current_source = self.determine_current_source()
 
@@ -55,7 +56,7 @@ class SourceManager:
         else:
             print(f'>>>>> Current source note: {self.current_source} <<<<<')
 
-    def load_note(self):
+    def load_note(self) -> None:
         """ Load a note. """
         root = tk.Tk()
         root.withdraw()
@@ -69,6 +70,7 @@ class SourceManager:
             input('Press Enter to continue...')
             clear_screen()
             self.open_note_with_default_app()
+            return self.current_source
 
     def save_current_source(self) -> None:
         """ Save the current source to the settings file. """
