@@ -4,6 +4,7 @@ from data import module_menus, stages
 from profile_module import ProfileManager
 from source_module import SourceManager
 from tools import clear_screen
+from cards_module import OpenAIComms
 
 
 class Application:
@@ -28,7 +29,7 @@ class Application:
             'select_source_note': SelectSource(self),
             'source_file': SourceFile(self),
             # 'source_notion': '',
-            # 'generate_cards': '',
+            'generate_cards': GenerateCards(self),
             'profile_menu': BackToProfileMenu(self),
             'exit': ExitProgram(self, self.profile_manager)
         }
@@ -191,7 +192,8 @@ class SelectProfile(Action):
         self.log('Profile selection...')
 
         profile = self.profile_manager.select_current_profile()
-
+        if profile:
+            self.app_inst.current_profile = profile
         print(f'Profile "{profile.profile_name}" selected.')
         input('Press Enter to continue...')
         clear_screen()
@@ -250,6 +252,35 @@ class SourceFile(Action):
         self.app_inst.current_source = self.app_inst.source_manager.load_note()
         if self.app_inst.current_source:
             self.app_inst.stage_and_module_handler.set_current_stage_and_module('source', 'note_selected_source')
+
+
+class GenerateCards(Action):
+    """ Class representing an action of generating flashcards. """
+
+    def __init__(self, app_inst) -> None:
+        """ Initialize the action. """
+        super().__init__(app_inst)
+
+    def execute(self) -> None:
+        """ Execute the action """
+        clear_screen()
+        if not self.app_inst.current_profile:
+            print('No profile selected.')
+            input('Press Enter to continue...')
+            clear_screen()
+            return
+        self.log('Generating flashcards...')
+        api_key = self.app_inst.current_profile.openai_api_key
+        model = self.app_inst.current_profile.gpt_model
+        content = self.app_inst.source_manager.read_note_content()
+        openai_comms = OpenAIComms(api_key)
+        flashcards = openai_comms.generate_flashcards(model, content)
+        if flashcards:
+            print(f'Flashcards generated: {flashcards}')
+        else:
+            print('Flashcards could not be generated.')
+        input('Press Enter to continue...')
+        clear_screen()
 
 
 class BackToProfileMenu(Action):

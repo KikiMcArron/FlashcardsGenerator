@@ -45,6 +45,8 @@ class SourceManager:
         with open(self.settings_file, 'r') as file:
             settings = json.load(file)
         current_source_data = settings.get('current_source')
+        if not current_source_data:
+            return None
         current_source = Source(**current_source_data)
         return current_source
 
@@ -71,6 +73,16 @@ class SourceManager:
             clear_screen()
             self.open_note_with_default_app()
             return self.current_source
+
+    def read_note_content(self) -> str:
+        """ Read the content of the note. """
+        try:
+            with open(self.current_source.source_path, 'r') as file:
+                content = file.read()
+            return content
+        except Exception as e:
+            print(f'Error occurred while reading the note: {e}')
+            return None
 
     def save_current_source(self) -> None:
         """ Save the current source to the settings file. """

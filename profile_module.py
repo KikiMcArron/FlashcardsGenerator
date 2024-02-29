@@ -9,7 +9,7 @@ from tools import clear_screen
 
 
 # TODO: Add encryption for profile files
-# TODO: Add logging
+# TODO: Add logging for profile operations
 
 
 class Profile:

@@ -11,7 +11,7 @@ source_menu_items = {
     'source_file': '1. Select the note file (.txt, .pdf)',
     'source_notion': '2. Select Notion note (coming soon)',
     'generate_cards': '7. Generate flashcards',
-    'profile_menu': '8. Back to profile configuration menu',
+    'profile_menu': '8. Back to main menu',
     'exit': '9. Quit program'
 }
 
