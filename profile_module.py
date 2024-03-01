@@ -81,7 +81,6 @@ class ProfileManager:
 
     def select_current_profile(self) -> Profile:
         """ Select a profile from the list of profiles. """
-        self.profiles = self.load_profiles()
         self.current_profile = self.ui_handler.profile_selection(self.profiles)
         self.validator.validate_profile(self.current_profile)
         self.update_profile_if_needed(self.current_profile)
@@ -112,12 +111,13 @@ class ProfileManager:
             if self.validator.is_unique_profile_name(self.profiles, profile_name):
                 break
             else:
-                print(f'Profile {profile_name} already exist')
+                print(f'Profile "{profile_name}" already exist')
 
         openai_api_key = self.ui_handler.get_openai_api_key_from_user()
         gpt_model = self.ui_handler.select_model()
         new_profile = Profile(profile_name, openai_api_key, gpt_model)
         self.save_to_file(new_profile, f'profiles/{profile_name}.json')
+        self.profiles = self.load_profiles()
 
     def edit_profile(self) -> None:
         """ Edit a profile from the list of profiles."""
@@ -145,10 +145,17 @@ class ProfileManager:
                     print(message)
                     input('Press Enter to continue...')
                 else:
-                    clear_screen()
-                    profile_dict[field] = input(handler)
-                    print(message)
-                    input('Press Enter to continue...')
+                    while True:
+                        clear_screen()
+                        profile_dict[field] = input(handler)
+                        if self.validator.is_unique_profile_name(self.profiles, profile_dict[field]):
+                            print(message)
+                            input('Press Enter to continue...')
+                            break
+                        else:
+                            print(f'Profile "{profile_dict[field]}" already exists. Please choose a different name.')
+                            input('Press Enter to continue...')
+                            continue
                 if field == 'profile_name' and not self.validator.is_unique_profile_name(self.profiles,
                                                                                          profile_dict[field]):
                     print(f'Profile {profile_dict[field]} already exists. Please choose a different name.')
