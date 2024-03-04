@@ -12,14 +12,14 @@ class Application:
 
     def __init__(self) -> None:
         """ Initialize the application. """
-        self.current_menu = None
+        self.current_menu = 'main_menu'
         self.current_stage = None
         self.profile_manager = ProfileManager()
         self.source_manager = SourceManager()
         self.current_profile = self.profile_manager.current_profile
         self.current_source = self.source_manager.current_source
         self.menu_and_stage_handler = MenuAndStageHandler(self)
-        self.menu_and_stage_handler.determine_current_menu_and_stage()
+        self.menu_and_stage_handler.determine_current_stage()
         self.user_input_handler = UserInputHandler(self)
         self.menu = Menu(self.current_menu, self.current_stage)
         self.action_dispatcher = {
@@ -53,20 +53,23 @@ class MenuAndStageHandler:
         """ Initialize the handler. """
         self.app_inst = app_inst
 
-    def determine_current_menu_and_stage(self) -> None:
+    def determine_current_stage(self) -> None:
         """ Determine the current stage of the application. """
         if not self.app_inst.profile_manager.profiles:
-            self.set_current_menu_and_stage('main_menu', 'initiation')
+            self.set_current_stage('initiation')
         elif not self.app_inst.current_profile:
-            self.set_current_menu_and_stage('main_menu', 'no_profile_selected')
+            self.set_current_stage('no_profile_selected')
         elif self.app_inst.current_profile and not self.app_inst.current_source:
-            self.set_current_menu_and_stage('main_menu', 'profile_selected')
+            self.set_current_stage('profile_selected')
         elif self.app_inst.current_profile and self.app_inst.current_source:
-            self.set_current_menu_and_stage('main_menu', 'note_selected')
+            self.set_current_stage('note_selected')
 
-    def set_current_menu_and_stage(self, menu, stage) -> None:
+    def set_current_menu(self, menu) -> None:
         """ Set the current stage of the application. """
         self.app_inst.current_menu = menu
+
+    def set_current_stage(self, stage) -> None:
+        """ Set the current stage of the application. """
         self.app_inst.current_stage = stage
 
     def change_stage(self, new_stage) -> None:
@@ -235,10 +238,7 @@ class SelectSource(Action):
     def execute(self) -> None:
         """ Execute the action """
         clear_screen()
-        if self.app_inst.current_source:
-            self.app_inst.menu_and_stage_handler.set_current_menu_and_stage('source_menu', 'note_selected')
-        else:
-            self.app_inst.menu_and_stage_handler.set_current_menu_and_stage('source_menu', 'no_note_selected')
+        self.app_inst.menu_and_stage_handler.set_current_menu('source_menu')
 
 
 class SourceFile(Action):
@@ -253,7 +253,8 @@ class SourceFile(Action):
         self.app_inst.current_source = self.app_inst.source_manager.load_note()
         clear_screen()
         if self.app_inst.current_source:
-            self.app_inst.menu_and_stage_handler.set_current_menu_and_stage('source_menu', 'note_selected')
+            self.app_inst.menu_and_stage_handler.set_current_menu('source_menu')
+            self.app_inst.menu_and_stage_handler.set_current_stage('note_selected')
 
 
 class GenerateCards(Action):
@@ -279,6 +280,7 @@ class GenerateCards(Action):
         flashcards = openai_comms.generate_flashcards(model, content)
         if flashcards:
             print(f'Flashcards generated: {flashcards}')
+            self.app_inst.menu_and_stage_handler.change_stage('cards_generated')
         else:
             print('Flashcards could not be generated.')
         input('Press Enter to continue...')
@@ -295,10 +297,7 @@ class BackToMainMenu(Action):
     def execute(self) -> None:
         """ Execute the action """
         clear_screen()
-        if not self.app_inst.current_source:
-            self.app_inst.menu_and_stage_handler.set_current_menu_and_stage('main_menu', 'profile_selected')
-        else:
-            self.app_inst.menu_and_stage_handler.set_current_menu_and_stage('main_menu', 'note_selected')
+        self.app_inst.menu_and_stage_handler.set_current_menu('main_menu')
 
 
 class ExitProgram(Action):
