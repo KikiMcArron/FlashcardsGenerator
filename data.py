@@ -1,14 +1,16 @@
+# TODO: Move all profile options to a separate menu: profile_menu
+
 main_menu = {
     'new_profile': '1. Add new profile',
     'select_profile': '2. Select profile',
     'edit_profile': '3. Edit profile',
-    'select_source_note': '6. Select source note',
-    'generate_cards': '7. Generate flashcards',
+    'select_source_note': '4. Select source note',
+    'generate_cards': '5. Generate flashcards',
     'exit': '9. Quit program'
 }
 
 source_menu = {
-    'source_file': '1. Select the note file (.txt, .pdf)',
+    'source_file': '1. Select the note from file (.txt)',
     'source_notion': '2. Select Notion note (coming soon)',
     'main_menu': '8. Back to main menu',
     'exit': '9. Quit program'
@@ -25,7 +27,6 @@ stages = {
     'profile_selected': ['new_profile', 'select_profile', 'edit_profile', 'select_source_note', 'exit'],
     'no_note_selected': ['source_file', 'source_notion', 'profile_menu', 'exit'],
     'note_selected': ['new_profile', 'select_profile', 'edit_profile', 'select_source_note', 'generate_cards', 'exit'],
-    # 'note_selected_source': ['source_file', 'source_notion', 'generate_cards', 'main_menu', 'exit']
 }
 
 openai_models = ["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4"]

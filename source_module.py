@@ -70,8 +70,8 @@ class SourceManager:
             self.save_current_source()
             print(f'Note loaded: {self.current_source}')
             input('Press Enter to continue...')
-            clear_screen()
-            self.open_note_with_default_app()
+            # clear_screen()
+            # self.open_note_with_default_app()
             return self.current_source
 
     def read_note_content(self) -> str:
@@ -97,13 +97,13 @@ class SourceManager:
         with open(self.settings_file, 'w') as file:
             json.dump(settings, file, indent=4)
 
-    def open_note_with_default_app(self) -> None:
-        """ Open the note with the default application. """
-        if not self.current_source:
-            print('No note selected.')
-            input('Press Enter to continue...')
-            return
-        try:
-            open_file(self.current_source.source_path)
-        except Exception as e:
-            print(f"Failed to open file: {e}")
+    # def open_note_with_default_app(self) -> None:
+    #     """ Open the note with the default application. """
+    #     if not self.current_source:
+    #         print('No note selected.')
+    #         input('Press Enter to continue...')
+    #         return
+    #     try:
+    #         open_file(self.current_source.source_path)
+    #     except Exception as e:
+    #         print(f"Failed to open file: {e}")

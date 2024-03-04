@@ -18,9 +18,9 @@ class Application:
         self.source_manager = SourceManager()
         self.current_profile = self.profile_manager.current_profile
         self.current_source = self.source_manager.current_source
-        self.menu_and_stage_handler = StageAndModuleHandler(self)
+        self.menu_and_stage_handler = MenuAndStageHandler(self)
+        self.menu_and_stage_handler.determine_current_menu_and_stage()
         self.user_input_handler = UserInputHandler(self)
-        self.menu_and_stage_handler.determine_current_stage()
         self.menu = Menu(self.current_menu, self.current_stage)
         self.action_dispatcher = {
             'new_profile': AddNewProfile(self, self.profile_manager),
@@ -46,14 +46,14 @@ class Application:
             self.user_input_handler.handle_user_input(user_input)
 
 
-class StageAndModuleHandler:
+class MenuAndStageHandler:
     """ Class responsible for managing the current stage and module of the application. """
 
     def __init__(self, app_inst) -> None:
         """ Initialize the handler. """
         self.app_inst = app_inst
 
-    def determine_current_stage(self) -> None:
+    def determine_current_menu_and_stage(self) -> None:
         """ Determine the current stage of the application. """
         if not self.app_inst.profile_manager.profiles:
             self.set_current_menu_and_stage('main_menu', 'initiation')
@@ -62,7 +62,7 @@ class StageAndModuleHandler:
         elif self.app_inst.current_profile and not self.app_inst.current_source:
             self.set_current_menu_and_stage('main_menu', 'profile_selected')
         elif self.app_inst.current_profile and self.app_inst.current_source:
-            self.set_current_menu_and_stage('main_menu', 'note_selected_profile')
+            self.set_current_menu_and_stage('main_menu', 'note_selected')
 
     def set_current_menu_and_stage(self, menu, stage) -> None:
         """ Set the current stage of the application. """
@@ -118,7 +118,7 @@ class Menu:
     def get_menu_items(self) -> list:
         """ Get menu items for the current stage and module. """
         menu_items_dict = menu_list[self.current_menu]
-        if self.current_menu == 'main_manu':
+        if self.current_menu == 'main_menu':
             return [menu_items_dict[item_id] for item_id in stages[self.current_stage]]
         else:
             return [menu_items_dict[item_id] for item_id in menu_items_dict]
@@ -239,7 +239,6 @@ class SelectSource(Action):
             self.app_inst.menu_and_stage_handler.set_current_menu_and_stage('source_menu', 'note_selected')
         else:
             self.app_inst.menu_and_stage_handler.set_current_menu_and_stage('source_menu', 'no_note_selected')
-        # self.app_inst.menu_and_stage_handler.change_stage('profile_selected')
 
 
 class SourceFile(Action):
@@ -251,8 +250,8 @@ class SourceFile(Action):
 
     def execute(self) -> None:
         """ Execute the action """
-        clear_screen()
         self.app_inst.current_source = self.app_inst.source_manager.load_note()
+        clear_screen()
         if self.app_inst.current_source:
             self.app_inst.menu_and_stage_handler.set_current_menu_and_stage('source_menu', 'note_selected')
 
