@@ -4,7 +4,7 @@ from data import menu_list, stages
 from profile_module import ProfileManager
 from source_module import SourceManager
 from tools import clear_screen
-from cards_module import OpenAIComms
+from cards_module import CardsGenerator
 
 
 class Application:
@@ -267,19 +267,17 @@ class GenerateCards(Action):
     def execute(self) -> None:
         """ Execute the action """
         clear_screen()
-        if not self.app_inst.current_profile:
-            print('No profile selected.')
-            input('Press Enter to continue...')
-            clear_screen()
-            return
         self.log('Generating flashcards...')
         api_key = self.app_inst.current_profile.openai_api_key
         model = self.app_inst.current_profile.gpt_model
         content = self.app_inst.source_manager.read_note_content()
-        openai_comms = OpenAIComms(api_key)
-        flashcards = openai_comms.generate_flashcards(model, content)
+        cards_generator = CardsGenerator(api_key)
+        flashcards = cards_generator.generate_flashcards(model, content)
+        print(f'Flashcards generated: {flashcards}')
+        input('Press Enter to continue...')
         if flashcards:
-            print(f'Flashcards generated: {flashcards}')
+            cards_generator.save_flashcards(flashcards)
+            print(f'Flashcards generated and saved to tmp file.')
             self.app_inst.menu_and_stage_handler.change_stage('cards_generated')
         else:
             print('Flashcards could not be generated.')

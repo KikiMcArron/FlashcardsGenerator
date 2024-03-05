@@ -31,7 +31,7 @@ stages = {
                         'work_with_cards', 'exit'],
 }
 
-openai_models = ["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4"]
+openai_models = ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-4', 'gpt-4-turbo-preview']
 
 file_types = [
     ('Text files', '.txt'),

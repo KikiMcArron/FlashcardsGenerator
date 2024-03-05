@@ -5,7 +5,7 @@ import json
 import stdiomask
 
 from data import openai_models
-from tools import clear_screen
+from tools import clear_screen, ensure_dir_exists, save_to_file
 
 
 # TODO: Add encryption for profile files
@@ -64,7 +64,7 @@ class ProfileManager:
 
     def load_profiles(self) -> list:
         """ Load profiles from files. """
-        self.validator.ensure_dir_exists(self.profiles_dir)
+        ensure_dir_exists(self.profiles_dir)
         profiles = []
         for filename in os.listdir(self.profiles_dir):
             if filename.endswith('.json'):
@@ -102,7 +102,7 @@ class ProfileManager:
             print(validation_errors['gpt_model'])
             profile.gpt_model = self.ui_handler.select_model()
             print(f'The GPT model in profile "{profile.profile_name}" has been updated')
-        self.save_to_file(profile, f'profiles/{profile.profile_name}.json')
+        save_to_file(profile.as_dict(), f'profiles/{profile.profile_name}.json')
 
     def add_new_profile(self) -> None:
         """ Add a new profile. """
@@ -116,7 +116,7 @@ class ProfileManager:
         openai_api_key = self.ui_handler.get_openai_api_key_from_user()
         gpt_model = self.ui_handler.select_model()
         new_profile = Profile(profile_name, openai_api_key, gpt_model)
-        self.save_to_file(new_profile, f'profiles/{profile_name}.json')
+        save_to_file(new_profile.as_dict(), f'profiles/{profile_name}.json')
         self.profiles = self.load_profiles()
 
     def edit_profile(self) -> None:
@@ -171,17 +171,10 @@ class ProfileManager:
                 (profile for profile in self.profiles if profile.profile_name == profile_dict['profile_name']), None)
             self.save_current_profile(self.current_profile.profile_name)
 
-    def save_to_file(self, profile, file_path) -> None:
-        """ Save the profile to a file. """
-        directory = os.path.dirname(file_path)
-        self.validator.ensure_dir_exists(directory)
-        with open(file_path, 'w') as file:
-            json.dump(profile.as_dict(), file, indent=4)
-
     def update_profile(self, original_profile_name, profile_dict) -> None:
         """ Update the profile with new data. """
         new_profile = Profile(**profile_dict)
-        self.save_to_file(new_profile, os.path.join('profiles', f'{new_profile.profile_name}.json'))
+        save_to_file(new_profile.as_dict(), os.path.join('profiles', f'{new_profile.profile_name}.json'))
         if original_profile_name != new_profile.profile_name:
             old_file_path = os.path.join('profiles', f'{original_profile_name}.json')
             if os.path.exists(old_file_path):
@@ -204,11 +197,6 @@ class ProfileManager:
 
 class ProfileUIHandler:
     """ Class responsible for handling the profile UI. """
-
-    def __init__(self) -> None:
-        """ Initialize the handler. """
-
-    pass
 
     def profile_selection(self, profiles) -> Profile:
         """ Select a profile from the list of profiles. """
@@ -264,12 +252,6 @@ class ProfileUIHandler:
 
 class ProfileValidations:
     """ Class responsible for validating profiles. """
-
-    @staticmethod
-    def ensure_dir_exists(directory) -> None:
-        """ Ensure that the directory exists. """
-        if not os.path.exists(directory):
-            os.makedirs(directory, exist_ok=True)
 
     @staticmethod
     def is_unique_profile_name(profiles, profile_name) -> bool:
