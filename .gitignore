@@ -1,6 +1,5 @@
-/profiles/*
-/flashcards/*
-/settings.json
-/draft.py
-/keys.txt
-/example_note.txt
+profiles/*
+flashcards/*
+settings.json
+keys.txt
+example_note.txt
