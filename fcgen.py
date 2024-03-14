@@ -1,11 +1,10 @@
-import json
 import sys
 
 from data import menu_list, stages
 from profile_module import ProfileManager
 from source_module import SourceManager
 from tools import clear_screen
-from cards_module import CardsGenerator
+from cards_module import CardsGenerator, CardsManager
 
 
 class Application:
@@ -19,6 +18,7 @@ class Application:
         self.current_profile = self.profile_manager.current_profile
         self.source_manager = SourceManager()
         self.current_source = self.source_manager.current_source
+        self.cards_manager = CardsManager()
         self.menu_and_stage_handler = MenuAndStageHandler(self)
         self.menu_and_stage_handler.determine_current_stage()
         self.user_input_handler = UserInputHandler(self)
@@ -269,17 +269,20 @@ class GenerateCards(Action):
         """ Execute the action """
         clear_screen()
         self.log('Generating flashcards...')
+
         api_key = self.app_inst.current_profile.openai_api_key
         model = self.app_inst.current_profile.gpt_model
         content = self.app_inst.source_manager.read_note_content()
         cards_generator = CardsGenerator(api_key)
         flashcards = cards_generator.generate_flashcards(model, content)
+
         if flashcards:
-            cards_generator.save_flashcards(flashcards)
-            print(f'Flashcards generated and saved to tmp file.')
-            self.app_inst.menu_and_stage_handler.change_stage('cards_generated')
+            self.app_inst.cards_manager.add_cards(flashcards)
+            self.app_inst.cards_manager.save_flashcards()
+            print('Flashcards generated and saved.')
         else:
             print('Flashcards could not be generated.')
+
         input('Press Enter to continue...')
         clear_screen()
 
