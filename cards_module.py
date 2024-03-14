@@ -1,16 +1,16 @@
+from tools import save_to_file
+from data import SETTINGS_FILE
 from openai import OpenAI
 from datetime import datetime
-from tools import save_to_file
 import json
 
 
 class CardsGenerator:
     """Class responsible for handling communication with the OpenAI via API."""
 
-    def __init__(self, api_key, settings_file='settings.json'):
+    def __init__(self, api_key):
         self.api_key = api_key
         self.client = OpenAI(api_key=self.api_key)
-        self.settings_file = settings_file
 
     def generate_flashcards(self, model, content) -> dict or None:
         """Generate flashcards based on the prompt."""
@@ -36,35 +36,39 @@ class CardsGenerator:
 
     def save_flashcards(self, flashcards):
         """Save the flashcards to a file."""
-        date_time = datetime.now().strftime('%Y%m%d_%H%M%S')
+        date_time = datetime.now().strftime('%Y-%m-%d_%H-%M')
         file_name = f'flashcards_{date_time}.json'
         file_path = f'flashcards/tmp/{file_name}'
         save_to_file(flashcards, file_path)
         self.save_current_flashcards(file_name)
 
-    def save_current_flashcards(self, tmp_file_name):
+    @staticmethod
+    def save_current_flashcards(tmp_file_name):
         """Save the flashcards to a file."""
         try:
-            with open(self.settings_file, 'r') as file:
+            with open(SETTINGS_FILE, 'r') as file:
                 settings = json.load(file)
         except (FileNotFoundError, json.JSONDecodeError):
             settings = {}
 
         settings['current_tmp_flashcards'] = tmp_file_name
 
-        with open(self.settings_file, 'w') as file:
+        with open(SETTINGS_FILE, 'w') as file:
             json.dump(settings, file, indent=4)
 
 
 class Card:
     """Class representing a single flashcard."""
 
-    def __init__(self, front, back):
+    def __init__(self, card_id, front, back):
+        self.card_id = card_id
         self.front = front
         self.back = back
 
     def __str__(self):
-        return f'Front: {self.front}\nBack: {self.back}'
+        return (f'Card ID: {self.card_id}\n'
+                f'Front: {self.front}\n'
+                f'Back: {self.back}')
 
 
 class CardManager:

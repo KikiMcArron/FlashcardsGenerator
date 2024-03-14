@@ -1,3 +1,4 @@
+import json
 import sys
 
 from data import menu_list, stages
@@ -15,8 +16,8 @@ class Application:
         self.current_menu = 'main_menu'
         self.current_stage = None
         self.profile_manager = ProfileManager()
-        self.source_manager = SourceManager()
         self.current_profile = self.profile_manager.current_profile
+        self.source_manager = SourceManager()
         self.current_source = self.source_manager.current_source
         self.menu_and_stage_handler = MenuAndStageHandler(self)
         self.menu_and_stage_handler.determine_current_stage()
@@ -273,8 +274,6 @@ class GenerateCards(Action):
         content = self.app_inst.source_manager.read_note_content()
         cards_generator = CardsGenerator(api_key)
         flashcards = cards_generator.generate_flashcards(model, content)
-        print(f'Flashcards generated: {flashcards}')
-        input('Press Enter to continue...')
         if flashcards:
             cards_generator.save_flashcards(flashcards)
             print(f'Flashcards generated and saved to tmp file.')

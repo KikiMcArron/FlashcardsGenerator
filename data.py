@@ -1,5 +1,8 @@
 # TODO: Move all profile options to a separate menu: profile_menu
 
+SETTINGS_FILE = 'settings.json'
+PROFILES_DIR = 'profiles'
+
 main_menu = {
     'new_profile': '1. Add new profile',
     'select_profile': '2. Select profile',

@@ -4,7 +4,7 @@ import os
 import json
 import stdiomask
 
-from data import openai_models
+from data import SETTINGS_FILE, PROFILES_DIR, openai_models
 from tools import clear_screen, ensure_dir_exists, save_to_file
 
 
@@ -38,19 +38,17 @@ class Profile:
 class ProfileManager:
     """ Class responsible for managing profiles. """
 
-    def __init__(self, profiles_dir='profiles', settings_file='settings.json') -> None:
+    def __init__(self) -> None:
         """ Initialize the profile manager. """
         self.validator = ProfileValidations()
         self.ui_handler = ProfileUIHandler()
-        self.settings_file = settings_file
-        self.profiles_dir = profiles_dir
         self.profiles = self.load_profiles()
         self.current_profile = self.determine_current_profile()
 
     def determine_current_profile(self) -> Profile:
-        if not os.path.exists(self.settings_file):
+        if not os.path.exists(SETTINGS_FILE):
             return None
-        with open(self.settings_file, 'r') as file:
+        with open(SETTINGS_FILE, 'r') as file:
             settings = json.load(file)
         current_profile_name = settings.get('current_profile')
         return next((profile for profile in self.profiles if profile.profile_name == current_profile_name), None)
@@ -64,11 +62,11 @@ class ProfileManager:
 
     def load_profiles(self) -> list:
         """ Load profiles from files. """
-        ensure_dir_exists(self.profiles_dir)
+        ensure_dir_exists(PROFILES_DIR)
         profiles = []
-        for filename in os.listdir(self.profiles_dir):
+        for filename in os.listdir(PROFILES_DIR):
             if filename.endswith('.json'):
-                file_path = os.path.join(self.profiles_dir, filename)
+                file_path = os.path.join(PROFILES_DIR, filename)
                 with open(file_path, 'r') as file:
                     try:
                         profile_data = json.load(file)
@@ -116,7 +114,7 @@ class ProfileManager:
         openai_api_key = self.ui_handler.get_openai_api_key_from_user()
         gpt_model = self.ui_handler.select_model()
         new_profile = Profile(profile_name, openai_api_key, gpt_model)
-        save_to_file(new_profile.as_dict(), f'profiles/{profile_name}.json')
+        save_to_file(new_profile.as_dict(), f'{PROFILES_DIR}/{profile_name}.json')
         self.profiles = self.load_profiles()
 
     def edit_profile(self) -> None:
@@ -181,17 +179,18 @@ class ProfileManager:
                 os.remove(old_file_path)
         self.profiles = self.load_profiles()
 
-    def save_current_profile(self, profile_name) -> None:
+    @staticmethod
+    def save_current_profile(profile_name) -> None:
         """ Save the current profile name to settings file. """
         try:
-            with open(self.settings_file, 'r') as file:
+            with open(SETTINGS_FILE, 'r') as file:
                 settings = json.load(file)
         except (FileNotFoundError, json.JSONDecodeError):
             settings = {}
 
         settings['current_profile'] = profile_name
 
-        with open(self.settings_file, 'w') as file:
+        with open(SETTINGS_FILE, 'w') as file:
             json.dump(settings, file, indent=4)
 
 

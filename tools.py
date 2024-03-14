@@ -33,7 +33,6 @@ def save_to_file(data_dict, file_path) -> None:
     directory = os.path.dirname(file_path)
     ensure_dir_exists(directory)
     with open(file_path, 'w') as file:
-        # json.dump(data_dict, file, indent=4)
         if isinstance(data_dict, dict):
             json.dump(data_dict, file, indent=4)
         else:

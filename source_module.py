@@ -1,10 +1,9 @@
 # Module responsible for managing sources of data.
 
-import json
 import tkinter as tk
 from tkinter import filedialog
 from tools import *
-from data import file_types
+from data import SETTINGS_FILE, file_types
 
 
 class Source:
@@ -32,17 +31,17 @@ class Source:
 class SourceManager:
     """ Class responsible for managing sources of data. """
 
-    def __init__(self, settings_file='settings.json') -> None:
+    def __init__(self) -> None:
         """ Initialize the manager. """
         # self.current_source = None
-        self.settings_file = settings_file
         self.current_source = self.determine_current_source()
 
-    def determine_current_source(self) -> Source:
+    @staticmethod
+    def determine_current_source() -> Source:
         """ Determine the current source of data. """
-        if not os.path.exists(self.settings_file):
+        if not os.path.exists(SETTINGS_FILE):
             return None
-        with open(self.settings_file, 'r') as file:
+        with open(SETTINGS_FILE, 'r') as file:
             settings = json.load(file)
         current_source_data = settings.get('current_source')
         if not current_source_data:
@@ -87,14 +86,14 @@ class SourceManager:
     def save_current_source(self) -> None:
         """ Save the current source to the settings file. """
         try:
-            with open(self.settings_file, 'r') as file:
+            with open(SETTINGS_FILE, 'r') as file:
                 settings = json.load(file)
         except (FileNotFoundError, json.JSONDecodeError):
             settings = {}
 
         settings['current_source'] = self.current_source.as_dict()
 
-        with open(self.settings_file, 'w') as file:
+        with open(SETTINGS_FILE, 'w') as file:
             json.dump(settings, file, indent=4)
 
     # def open_note_with_default_app(self) -> None:
