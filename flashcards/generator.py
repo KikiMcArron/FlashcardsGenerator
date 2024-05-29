@@ -1,7 +1,9 @@
-from typing import Optional
-from openai import OpenAI
-from logger import logger, queries_logger
 from abc import ABC, abstractmethod
+from typing import Optional
+
+from openai import OpenAI
+
+from logger import logger, queries_logger
 
 
 class AIClient(ABC):
