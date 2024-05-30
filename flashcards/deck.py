@@ -1,6 +1,6 @@
 import uuid
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List
 
 from custom_exceptions import NoCardError
 from logger import logger
@@ -19,14 +19,10 @@ class Card:
 
 class Deck:
     """Class representing a deck of flashcards."""
-    def __init__(self, name: Optional[str] = None) -> None:
-        """
-        Initialize a deck with an optional name.
 
-        :param name: Optional name for the deck.
-        """
+    def __init__(self) -> None:
+        """Initialize a deck with an empty list of cards."""
         self.cards: List[Card] = []
-        self.name = name
 
     def load_cards(self, cards: List[Card]) -> None:
         """
@@ -44,7 +40,7 @@ class Deck:
         :param card: Card object to be added to the deck.
         """
         self.cards.append(card)
-        logger.info(f"Card (id: {card.card_id}) added to deck {self.name}.")
+        logger.info(f"Card (id: {card.card_id}) added to deck.")
 
     def remove_card(self, card: Card) -> None:
         """
@@ -55,9 +51,9 @@ class Deck:
         """
         try:
             self.cards.remove(card)
-            logger.info(f'Card (id: {card.card_id}) removed from deck {self.name}.')
+            logger.info(f'Card (id: {card.card_id}) removed from deck.')
         except ValueError:
-            logger.error(f'Failed to remove card from deck {self.name}, card (id: {card.card_id}) not found.')
+            logger.error(f'Failed to remove card from deck, card (id: {card.card_id}) not found.')
             raise NoCardError('Card not found in deck.') from None
 
     def replace_card(self, card: Card, new_card: Card) -> None:
@@ -71,8 +67,7 @@ class Deck:
         try:
             index = self.cards.index(card)
             self.cards[index] = new_card
-            logger.info(
-                f'Card (id: {card.card_id}) has been replaced with new card (id: {new_card.card_id}) in deck {self.name}.')
+            logger.info(f'Card (id: {card.card_id}) has been replaced with new card (id: {new_card.card_id}) in deck.')
         except ValueError:
-            logger.error(f'Could not replace card, card (id: {card.card_id}) not found in deck {self.name}.')
+            logger.error(f'Could not replace card, card (id: {card.card_id}) not found in deck.')
             raise NoCardError('Card not found in deck.') from None
