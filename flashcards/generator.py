@@ -40,7 +40,7 @@ class OpenAIClient(AIClient):
         """
         response = self.client.chat.completions.create(
             model=model,
-            messages=messages,
+            messages=messages,  # type: ignore
             max_tokens=1000,
             temperature=0.5,
             top_p=1.0,
