@@ -27,9 +27,9 @@ monitoring_handler.setFormatter(monitoring_formatter)
 logger.addHandler(monitoring_handler)
 
 # Handler for error logs (detailed logs to file)
-error_file_handler = logging.FileHandler('error_details.log')
-error_file_handler.setLevel(logging.ERROR)
-error_file_formatter = logging.Formatter(
+errors_handler = logging.FileHandler('error_details.log')
+errors_handler.setLevel(logging.ERROR)
+errors_formatter = logging.Formatter(
     '%(asctime)s - %(levelname)s - %(name)s\nPath: %(pathname)s - Line: %(lineno)d\n%(message)s', '%Y-%m-%d %H:%M:%S')
-error_file_handler.setFormatter(error_file_formatter)
-logger.addHandler(error_file_handler)
+errors_handler.setFormatter(errors_formatter)
+logger.addHandler(errors_handler)
