@@ -33,7 +33,7 @@ class Deck:
         self.cards.extend(cards)
         logger.info(f"{len(cards)} valid cards loaded into deck.")
 
-    # I think this method is useless, because we can just use load_cards method.
+    # I think this method is useless, because I can just use load_cards method.
     # def add_card(self, card: Card) -> None:
     #     """
     #     Add a single card to the deck.

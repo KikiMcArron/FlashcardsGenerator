@@ -1,5 +1,13 @@
+import os
 import json
 from typing import List, Dict, Optional
+
+clear_command = 'cls' if os.name == 'nt' else 'clear'
+
+
+def clear_screen() -> None:
+    """ Clear the screen. """
+    os.system(clear_command)
 
 
 def json_to_list_of_dicts(json_string: Optional[str]) -> List[Dict[str, str]]:
