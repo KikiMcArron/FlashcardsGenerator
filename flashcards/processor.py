@@ -1,5 +1,5 @@
 from dataclasses import is_dataclass, fields
-from typing import TypeVar, Generic, Optional, List
+from typing import TypeVar, Generic, Optional, List, Dict
 import os
 import platform
 import subprocess
@@ -11,6 +11,7 @@ T = TypeVar('T')
 
 class DataclassEditor(Generic[T]):
     """Class for editing dataclasses in a text editor."""
+
     def __init__(self, editor: Optional[str] = None, display_fields: Optional[List[str]] = None) -> None:
         """
         Initialize the DataclassEditor.
@@ -20,8 +21,10 @@ class DataclassEditor(Generic[T]):
         """
         self.display_fields = display_fields
         self.editor = editor if editor else self._get_default_editor()
+        self.tmpfields: Dict = {}
 
-    def _get_default_editor(self) -> str:
+    @staticmethod
+    def _get_default_editor() -> str:
         """
         Get the default text editor.
 
@@ -50,16 +53,18 @@ class DataclassEditor(Generic[T]):
         tmpfile = tempfile.NamedTemporaryFile(delete=False, mode='w+')
         try:
             for field in fields(obj):
-                if self.display_fields is None or field.name in self.display_fields:
+                if (self.display_fields is None or field.name in self.display_fields) and field.init is True:
                     value = getattr(obj, field.name)
                     tmpfile.write(f'{field.name.capitalize()}: {value}\n')
+                elif field.init is True:
+                    value = getattr(obj, field.name)
+                    self.tmpfields[field.name] = value
             tmpfile.flush()
             return tmpfile.name
         finally:
             tmpfile.close()
 
-    @staticmethod
-    def _read_dataclass_from_tempfile(filepath: str, obj_type: type) -> T:
+    def _read_dataclass_from_tempfile(self, filepath: str, obj_type: type) -> T:
         """
         Read the dataclass from a temporary file.
 
@@ -74,7 +79,7 @@ class DataclassEditor(Generic[T]):
                 field_name = name.lower()
                 data[field_name] = value
         os.remove(filepath)
-        return obj_type(**data)
+        return obj_type(**data, **self.tmpfields)
 
     def edit_dataclass(self, obj: T) -> T:
         """

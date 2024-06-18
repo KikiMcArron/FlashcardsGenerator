@@ -33,16 +33,6 @@ class Deck:
         self.cards.extend(cards)
         logger.info(f"{len(cards)} valid cards loaded into deck.")
 
-    # I think this method is useless, because I can just use load_cards method.
-    # def add_card(self, card: Card) -> None:
-    #     """
-    #     Add a single card to the deck.
-    #
-    #     :param card: Card object to be added to the deck.
-    #     """
-    #     self.cards.append(card)
-    #     logger.info(f"Card (id: {card.card_id}) added to deck.")
-
     def remove_card(self, card: Card) -> None:
         """
         Remove a single card from the deck.
@@ -56,20 +46,3 @@ class Deck:
         except ValueError:
             logger.error(f'Failed to remove card from deck, card (id: {card.card_id}) not found.')
             raise NoCardError('Card not found in deck.') from None
-
-    # I think this method is useless, because I can just use remove_card method.
-    # def replace_card(self, card: Card, new_card: Card) -> None:
-    #     """
-    #     Replace an existing card in the deck with a new card.
-    #
-    #     :param card: Card object to be replaced.
-    #     :param new_card: New Card object to replace the existing card.
-    #     :raises NoCardError: If the card to be replaced is not found in the deck.
-    #     """
-    #     try:
-    #         index = self.cards.index(card)
-    #         self.cards[index] = new_card
-    #         logger.info(f'Card (id: {card.card_id}) has been replaced with new card (id: {new_card.card_id}) in deck.')
-    #     except ValueError:
-    #         logger.error(f'Could not replace card, card (id: {card.card_id}) not found in deck.')
-    #         raise NoCardError('Card not found in deck.') from None
