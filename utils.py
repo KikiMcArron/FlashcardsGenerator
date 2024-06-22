@@ -1,5 +1,6 @@
 import os
 import json
+import platform
 from typing import List, Dict, Optional
 
 clear_command = 'cls' if os.name == 'nt' else 'clear'
@@ -8,6 +9,23 @@ clear_command = 'cls' if os.name == 'nt' else 'clear'
 def clear_screen() -> None:
     """ Clear the screen. """
     os.system(clear_command)
+
+
+def get_default_editor() -> str:
+    """
+    Get the default text editor.
+
+    :return: The default text editor.
+    """
+    system = platform.system()
+    if system == 'Windows':
+        return 'notepad'
+    elif system == 'Darwin':
+        return 'nano'
+    elif system == 'Linux':
+        return os.getenv('EDITOR', 'nano')
+    else:
+        raise RuntimeError('Unsupported operating system.')
 
 
 def json_to_list_of_dicts(json_string: Optional[str]) -> List[Dict[str, str]]:

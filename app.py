@@ -1,6 +1,6 @@
 from flashcards.deck import Card, Deck
 from flashcards.editor import DataclassEditor
-import utils
+from utils import clear_screen
 
 CARDS = [Card(front='Front 1', back='Back 1'), Card(front='Front 2', back='Back 2'),
          Card(front='Front 3', back='Back 3')]
@@ -28,7 +28,7 @@ def main():
             edited_card = card_editor.edit_dataclass(card)
             final_deck.load_cards([Card(front=edited_card.front, back=edited_card.back)])
         input('Press enter to continue...')
-        utils.clear_screen()
+        clear_screen()
 
     print('Temporary deck:')
     for card in tmp_deck.cards:

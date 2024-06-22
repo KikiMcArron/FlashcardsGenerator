@@ -1,10 +1,10 @@
 from dataclasses import is_dataclass, fields
 from typing import TypeVar, Generic, Optional, List, Dict
 import os
-import platform
 import subprocess
 import tempfile
 
+from utils import get_default_editor
 
 T = TypeVar('T')
 
@@ -20,25 +20,8 @@ class DataclassEditor(Generic[T]):
         :param display_fields: The fields to display in the editor. If None, all fields will be displayed.
         """
         self.display_fields = display_fields
-        self.editor = editor if editor else self._get_default_editor()
+        self.editor = editor if editor else get_default_editor()
         self.tmpfields: Dict = {}
-
-    @staticmethod
-    def _get_default_editor() -> str:
-        """
-        Get the default text editor.
-
-        :return: The default text editor.
-        """
-        system = platform.system()
-        if system == 'Windows':
-            return 'notepad'
-        elif system == 'Darwin':
-            return 'nano'
-        elif system == 'Linux':
-            return os.getenv('EDITOR', 'nano')
-        else:
-            raise RuntimeError('Unsupported operating system.')
 
     def _write_dataclass_to_tempfile(self, obj: T) -> str:
         """

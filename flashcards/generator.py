@@ -55,14 +55,14 @@ class OpenAIClient(AIClient):
 class CardsGenerator:
     """Class responsible for generating flashcards using an AI client."""
 
-    def __init__(self, api_client: AIClient) -> None:
+    def __init__(self, ai_client: AIClient) -> None:
         """
         Initialize the CardsGenerator with the provided AI client.
 
-        :param api_client: An instance of AIClient to use for generating flashcards.
+        :param ai_client: An instance of AIClient to use for generating flashcards.
         """
-        self.api_client = api_client
-        logger.info(f'CardsGenerator initialized with: {self.api_client}.')
+        self.ai_client = ai_client
+        logger.info(f'CardsGenerator initialized with: {self.ai_client}.')
 
     def generate_flashcards(self, model: str, prompt: str, content: str) -> Optional[str]:
         """
@@ -77,7 +77,7 @@ class CardsGenerator:
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": f"{prompt}\n\n{content}"},
             ]
-            response = self.api_client.generate_completion(model, messages)
+            response = self.ai_client.generate_completion(model, messages)
             queries_logger.debug(f'Model: {model}\nContent: {content[:100] + '...'}\nResponse: {response}\n\n')
             return response
         except Exception as e:

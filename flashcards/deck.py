@@ -21,7 +21,6 @@ class Deck:
     """Class representing a deck of flashcards."""
 
     def __init__(self) -> None:
-        """Initialize a deck with an empty list of cards."""
         self.cards: List[Card] = []
 
     def load_cards(self, cards: List[Card]) -> None:
