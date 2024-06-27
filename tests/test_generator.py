@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from flashcards.generator import AIClient, OpenAIClient, CardsGenerator
+from flashcards.generator import OpenAIClient, CardsGenerator
 
 
 # Fixtures for setting up mocks and objects
@@ -25,7 +25,7 @@ def openai_client(api_key, mock_openai_client):
 
 @pytest.fixture
 def cards_generator(openai_client):
-    return CardsGenerator(api_client=openai_client)
+    return CardsGenerator(ai_client=openai_client)
 
 
 # Tests for OpenAIClient
@@ -97,4 +97,3 @@ def test_generate_flashcards_failure(cards_generator, mock_openai_client):
 
     with pytest.raises(Exception, match='API call failed'):
         cards_generator.generate_flashcards(model, prompt, content)
-
