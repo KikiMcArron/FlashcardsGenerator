@@ -17,6 +17,7 @@ class SampleDataClass:
 
 
 # Test initialization of DataclassEditor
+
 def mock_get_default_text_editor():
     return "mock_editor"
 
@@ -186,8 +187,7 @@ def test_edit_dataclass_all_fields():
     tmpfile_mock = NamedTemporaryFileMock(delete=False, name=tmpfile_name)
     with tmpfile_mock as tmpfile:
         tmpfile.write(mock_tempfile_content)
-        tmpfile.flush()  # Ensure content is written
-
+        tmpfile.flush()
     def mock_subprocess_run(cmd):
         with open(cmd[1], 'w') as f:
             f.write(mock_tempfile_content)
@@ -204,7 +204,7 @@ def test_edit_dataclass_all_fields():
         assert edited_obj.email == "jane.doe@example.com"
         assert edited_obj.internal_id == "12345"
 
-    tmpfile_mock.close()  # Explicitly close the file
+    tmpfile_mock.close()
 
 
 def test_edit_dataclass_with_display_fields():
@@ -217,7 +217,7 @@ def test_edit_dataclass_with_display_fields():
     tmpfile_mock = NamedTemporaryFileMock(delete=False, name=tmpfile_name)
     with tmpfile_mock as tmpfile:
         tmpfile.write(mock_tempfile_content)
-        tmpfile.flush()  # Ensure content is written
+        tmpfile.flush()
 
     def mock_subprocess_run(cmd):
         with open(cmd[1], 'w') as f:
@@ -235,9 +235,9 @@ def test_edit_dataclass_with_display_fields():
         assert edited_obj.name == "Jane Doe"
         assert edited_obj.email == "jane.doe@example.com"
         assert edited_obj.internal_id == "12345"
-        assert edited_obj.age == 30  # Value should be taken from tmpfields
+        assert edited_obj.age == 30
 
-    tmpfile_mock.close()  # Explicitly close the file
+    tmpfile_mock.close()
 
 
 def test_edit_dataclass_missing_required_field():
@@ -250,7 +250,7 @@ def test_edit_dataclass_missing_required_field():
     tmpfile_mock = NamedTemporaryFileMock(delete=False, name=tmpfile_name)
     with tmpfile_mock as tmpfile:
         tmpfile.write(mock_tempfile_content)
-        tmpfile.flush()  # Ensure content is written
+        tmpfile.flush()
 
     def mock_subprocess_run(cmd):
         with open(cmd[1], 'w') as f:
@@ -267,7 +267,7 @@ def test_edit_dataclass_missing_required_field():
 
         assert edited_obj.name == "Jane Doe"
         assert edited_obj.internal_id == "12345"
-        assert edited_obj.age == 30  # Value should be taken from tmpfields
-        assert edited_obj.email == "john.doe@example.com"  # Value should be taken from tmpfields
+        assert edited_obj.age == 30
+        assert edited_obj.email == "john.doe@example.com"
 
-    tmpfile_mock.close()  # Explicitly close the file
+    tmpfile_mock.close()
