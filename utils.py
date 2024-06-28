@@ -1,7 +1,7 @@
-import os
 import json
+import os
 import platform
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 clear_command = 'cls' if os.name == 'nt' else 'clear'
 
@@ -11,7 +11,7 @@ def clear_screen() -> None:
     os.system(clear_command)
 
 
-def get_default_editor() -> str:
+def get_default_text_editor() -> str:
     """
     Get the default text editor.
 

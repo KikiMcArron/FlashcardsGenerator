@@ -1,10 +1,10 @@
-from dataclasses import is_dataclass, fields
-from typing import TypeVar, Generic, Optional, List, Dict
 import os
 import subprocess
 import tempfile
+from dataclasses import fields, is_dataclass
+from typing import Dict, Generic, List, Optional, TypeVar
 
-from utils import get_default_editor
+from utils import get_default_text_editor
 
 T = TypeVar('T')
 
@@ -12,18 +12,18 @@ T = TypeVar('T')
 class DataclassEditor(Generic[T]):
     """Class for editing dataclasses in a text editor."""
 
-    def __init__(self, editor: Optional[str] = None, display_fields: Optional[List[str]] = None) -> None:
+    def __init__(self, text_editor: Optional[str] = None, display_fields: Optional[List[str]] = None) -> None:
         """
         Initialize the DataclassEditor.
 
-        :param editor: The text editor to use. If None, the default editor will be used.
+        :param text_editor: The text editor to use. If None, the default editor will be used.
         :param display_fields: The fields to display in the editor. If None, all fields will be displayed.
         """
         self.display_fields = display_fields
-        self.editor = editor if editor else get_default_editor()
+        self.text_editor = text_editor if text_editor else get_default_text_editor()
         self.tmpfields: Dict = {}
 
-    def _write_dataclass_to_tempfile(self, obj: T) -> str:
+    def _write_dataclass_to_tmpfile(self, obj: T) -> str:
         """
         Write the dataclass to a temporary file.
 
@@ -47,7 +47,7 @@ class DataclassEditor(Generic[T]):
         finally:
             tmpfile.close()
 
-    def _read_dataclass_from_tempfile(self, filepath: str, obj_type: type) -> T:
+    def _read_dataclass_from_tmpfile(self, filepath: str, obj_type: type) -> T:
         """
         Read the dataclass from a temporary file.
 
@@ -72,6 +72,6 @@ class DataclassEditor(Generic[T]):
         :return: The modified dataclass object.
         """
         obj_file = type(obj)
-        filepath = self._write_dataclass_to_tempfile(obj)
-        subprocess.run([self.editor, filepath])
-        return self._read_dataclass_from_tempfile(filepath, obj_file)
+        filepath = self._write_dataclass_to_tmpfile(obj)
+        subprocess.run([self.text_editor, filepath])
+        return self._read_dataclass_from_tmpfile(filepath, obj_file)

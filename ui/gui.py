@@ -8,6 +8,7 @@ class FileSelector:
 
     :param file_types: A list of file types to allow selection of.
     """
+
     def __init__(self, file_types: list) -> None:
         self.file_types = file_types
         self.file_path = ''
