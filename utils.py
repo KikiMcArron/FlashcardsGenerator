@@ -3,6 +3,8 @@ import os
 import platform
 from typing import Dict, List, Optional
 
+import bcrypt
+
 clear_command = 'cls' if os.name == 'nt' else 'clear'
 
 
@@ -36,3 +38,9 @@ def json_to_list_of_dicts(json_string: Optional[str]) -> List[Dict[str, str]]:
     except json.JSONDecodeError as e:
         print(f'Error converting JSON to list of dicts: {e}')
         raise ValueError(f'Invalid JSON format: {e}.') from e
+
+
+def _encrypt(secure_txt: str) -> str:
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(secure_txt.encode('utf8'), salt)
+    return hashed.decode('utf8')
