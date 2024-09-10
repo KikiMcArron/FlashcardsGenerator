@@ -33,3 +33,7 @@ class InvalidUsername(Exception):
 
 class InvalidPassword(Exception):
     pass
+
+
+class ValidationError(Exception):
+    pass
