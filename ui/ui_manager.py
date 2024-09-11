@@ -56,17 +56,3 @@ class UserInputHandler:
         input('Press Enter to continue...')
         return None
 
-
-menu = 'main_menu'
-stage = 'initiation'
-while True:
-    menu_handler = MenuHandler(menu, stage)
-    menu_handler.display_menu()
-
-    user_input_handler = UserInputHandler(menu, menu_handler.menu_items)
-    user_input = input('>>>>>> ')
-
-    selected_action = user_input_handler.input_to_action(user_input)
-
-    if selected_action == 'exit':
-        break  # Exit the loop if the user selects 'exit'
