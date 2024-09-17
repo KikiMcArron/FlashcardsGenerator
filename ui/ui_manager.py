@@ -11,7 +11,7 @@ class MenuHandler:
     def _build_menu_items(self):
         menu_items_dict = self._get_menu_list()
 
-        if self.current_menu == 'main_menu':
+        if all(item in list(menu_items_dict.keys()) for item in stages.get(self.current_stage)):
             return self._filtered_menu_by_stage(menu_items_dict)
         return list(menu_items_dict.values())
 
@@ -56,3 +56,17 @@ class UserInputHandler:
         input('Press Enter to continue...')
         return None
 
+
+menu = 'main_menu'
+stage = 'test'
+while True:
+    menu_handler = MenuHandler(menu, stage)
+    menu_handler.display_menu()
+
+    user_input_handler = UserInputHandler(menu, menu_handler.menu_items)
+    user_input = input('>>>>>> ')
+
+    selected_action = user_input_handler.input_to_action(user_input)
+
+    if selected_action == 'exit':
+        break

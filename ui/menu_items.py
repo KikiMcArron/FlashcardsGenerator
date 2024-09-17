@@ -37,5 +37,5 @@ stages = {
     'note_selected': ['new_profile', 'select_profile', 'edit_profile', 'select_source_note', 'generate_cards',
                       'logout', 'exit'],
     'cards_generated': ['new_profile', 'select_profile', 'edit_profile', 'select_source_note', 'generate_cards',
-                        'work_with_cards', 'logout', 'exit'],
+                        'work_with_cards', 'logout', 'exit']
 }
