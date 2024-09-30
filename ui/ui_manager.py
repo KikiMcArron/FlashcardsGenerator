@@ -1,72 +1,64 @@
+from typing import Optional, List
 from ui.menu_items import menu_list, stages
-from typing import Optional
 
 
-class MenuHandler:
-    def __init__(self, current_menu: str, current_stage: str = ''):
-        self.current_menu = current_menu
-        self.current_stage = current_stage
+class ContextManager:
+    def __init__(self) -> None:
+        self.current_menu: str = 'log_menu'
+        self.current_stage: str = 'initiation'
+
+    def update_menu(self, new_menu: str) -> None:
+        self.current_menu = new_menu
+
+    def update_stage(self, new_stage: str) -> None:
+        self.current_stage = new_stage
+
+
+class MenuManager:
+    def __init__(self, context: ContextManager) -> None:
+        self.context = context
+        self.menu_items: List[str] = []
+
+    def display_menu(self) -> None:
         self.menu_items = self._build_menu_items()
-
-    def _build_menu_items(self):
-        menu_items_dict = self._get_menu_list()
-
-        if all(item in list(menu_items_dict.keys()) for item in stages.get(self.current_stage)):
-            return self._filtered_menu_by_stage(menu_items_dict)
-        return list(menu_items_dict.values())
-
-    def _get_menu_list(self) -> dict:
-        try:
-            return menu_list[self.current_menu]
-        except KeyError:
-            raise ValueError(f'Menu "{self.current_menu}" not found')
-
-    def _filtered_menu_by_stage(self, menu_items_dict):
-        try:
-            return [menu_items_dict[item_id] for item_id in stages[self.current_stage]]
-        except KeyError:
-            raise ValueError(f'Stage "{self.current_stage}" not found.')
-
-    def display_menu(self):
         print('Select your action:')
         for item in self.menu_items:
             print(item)
 
-
-class UserInputHandler:
-    def __init__(self, current_menu: str, available_items: list):
-        self.current_menu = current_menu
-        self.available_items = available_items
-
-    def input_to_action(self, input_value: str) -> Optional[str]:
-        """Process user input and ensure it matches displayed menu items."""
-        menu_items_dict = menu_list[self.current_menu]
+    def process_input(self, input_value: str) -> Optional[str]:
+        current_menu = self.context.current_menu
+        menu_items_dict = menu_list[current_menu]
         input_to_action_key = {v: k for k, v in menu_items_dict.items()}
+        selected_item = next((item for item in self.menu_items if item.startswith(input_value)), None)
 
-        # Validate user input only against the available items (filtered menu)
-        matching_items = [item for item in self.available_items if item.startswith(input_value)]
-
-        if matching_items:
-            selected_item = matching_items[0]  # Taking the first match for simplicity
+        if selected_item:
             action_key = input_to_action_key[selected_item]
-            print(f"Action selected: {action_key}")
             return action_key
 
-        print(f'Option "{input_value}" is not available.')
-        input('Press Enter to continue...')
+        print(f'Option {input_value} is not available. Press Enter to continue...')
+        input()
         return None
 
+    def _build_menu_items(self) -> list[str]:
+        current_menu: str = self.context.current_menu
+        current_stage: str = self.context.current_stage
 
-menu = 'main_menu'
-stage = 'test'
-while True:
-    menu_handler = MenuHandler(menu, stage)
-    menu_handler.display_menu()
+        menu_items_dict: dict[str, str] = self._get_menu_list(current_menu)
 
-    user_input_handler = UserInputHandler(menu, menu_handler.menu_items)
-    user_input = input('>>>>>> ')
+        if all(item in menu_items_dict for item in stages[current_stage]):
+            return self._filtered_menu_by_stage(menu_items_dict, current_stage)
+        return list(menu_items_dict.values())
 
-    selected_action = user_input_handler.input_to_action(user_input)
+    @staticmethod
+    def _get_menu_list(current_menu: str) -> dict:
+        try:
+            return menu_list[current_menu]
+        except KeyError:
+            raise ValueError(f'Menu "{current_menu}" not found')
 
-    if selected_action == 'exit':
-        break
+    @staticmethod
+    def _filtered_menu_by_stage(menu_items_dict: dict[str, str], current_stage: str) -> list[str]:
+        try:
+            return [menu_items_dict[item_id] for item_id in stages[current_stage]]
+        except KeyError:
+            raise ValueError(f'Stage "{current_stage}" not found.')
