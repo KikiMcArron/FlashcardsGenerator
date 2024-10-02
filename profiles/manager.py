@@ -56,18 +56,12 @@ class PasswordValidator:
 
 
 class UserManager:
-    def __init__(self, password_validator: PasswordValidator) -> None:
+    def __init__(self) -> None:
         self.users: Dict[str, User] = {}
-        self.password_validator = password_validator
 
     def add_user(self, username: str, password: str) -> None:
         if username in self.users:
             raise UsernameAlreadyExists(f'Username {username} already exists')
-
-        try:
-            self.password_validator.is_valid(password)
-        except ValidationError as e:
-            raise ValueError(f'Password validation failed: {e}')
 
         self.users[username] = User(username, password)
 

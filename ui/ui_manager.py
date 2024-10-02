@@ -21,7 +21,6 @@ class MenuManager:
 
     def display_menu(self) -> None:
         self.menu_items = self._build_menu_items()
-        print('Select your action:')
         for item in self.menu_items:
             print(item)
 
