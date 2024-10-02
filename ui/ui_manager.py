@@ -1,17 +1,26 @@
 from typing import Optional, List
 from ui.menu_items import menu_list, stages
+from profiles.user_profile import User, Profile
 
 
 class ContextManager:
     def __init__(self) -> None:
         self.current_menu: str = 'log_menu'
         self.current_stage: str = 'initiation'
+        self.current_user: Optional[User] = None
+        self.current_profile: Optional[Profile] = None
 
     def update_menu(self, new_menu: str) -> None:
         self.current_menu = new_menu
 
     def update_stage(self, new_stage: str) -> None:
         self.current_stage = new_stage
+
+    def update_user(self, user: User) -> None:
+        self.current_user = user
+
+    def update_profile(self, profile: Profile) -> None:
+        self.current_profile = profile
 
 
 class MenuManager:
