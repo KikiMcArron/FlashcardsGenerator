@@ -44,3 +44,20 @@ def _encrypt(secure_txt: str) -> str:
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(secure_txt.encode('utf8'), salt)
     return hashed.decode('utf8')
+
+
+def save_to_file(data_dict, file_path) -> None:
+    """ Save the profile to a file. """
+    directory = os.path.dirname(file_path)
+    _ensure_dir_exists(directory)
+    with open(file_path, 'w') as file:
+        if isinstance(data_dict, dict):
+            json.dump(data_dict, file, indent=4)
+        else:
+            file.write(data_dict)
+
+
+def _ensure_dir_exists(directory) -> None:
+    """ Ensure that the directory exists. """
+    if not os.path.exists(directory):
+        os.makedirs(directory, exist_ok=True)
