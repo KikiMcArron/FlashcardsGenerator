@@ -1,0 +1,120 @@
+import stdiomask  # type: ignore
+
+from profiles.manager import UserManager, PasswordValidator, AuthenticationManager
+from ui.ui_manager import ContextManager, MenuManager
+from utils import clear_screen
+from custom_exceptions import ValidationError, InvalidUsername, InvalidPassword
+
+
+class Application:
+    def __init__(self):
+        self.context_manager = ContextManager()
+        self.menu_manager = MenuManager(self.context_manager)
+        self.user_manager = UserManager()
+        self.auth_manager = AuthenticationManager(self.user_manager)
+        self.action_dispatcher = {
+            'login': LogIn(self.context_manager, self.user_manager, self.auth_manager),
+            'new_user': NewUser(self.user_manager)
+            # 'new_profile': AddNewProfile(self, self.profile_manager),
+            # 'select_profile': SelectProfile(self, self.profile_manager),
+            # 'edit_profile': EditProfile(self, self.profile_manager),
+            # 'select_source_note': SelectSource(self),
+            # 'source_file': SourceFile(self),
+            # 'source_notion': '',
+            # 'generate_cards': GenerateCards(self),
+            # 'main_menu': BackToMainMenu(self),
+            # 'exit': ExitProgram(self, self.profile_manager)
+        }
+
+    def main(self):
+        clear_screen()
+        while True:
+            print('Select your action:')
+            self.menu_manager.display_menu()
+            user_input = input('>>>>> ')
+            action_key = self.menu_manager.process_input(user_input)
+            self._execute_action(action_key)
+            clear_screen()
+
+    def _execute_action(self, action_key):
+        action = self.action_dispatcher.get(action_key)
+        action.execute()
+
+
+class Action:
+    def execute(self):
+        raise NotImplementedError('Subclasses should implement this!')
+
+    @staticmethod
+    def log(message):
+        print(f'[LOG] {message}')
+
+
+class LogIn(Action):
+    def __init__(self,
+                 context_manager: ContextManager,
+                 user_manager: UserManager,
+                 auth_manager: AuthenticationManager):
+        self.context_manager = context_manager
+        self.user_manager = user_manager
+        self.auth_manager = auth_manager
+
+    def execute(self):
+        clear_screen()
+        self.log('Logging in...')
+        user_name = input('Username: ')
+        password = stdiomask.getpass(prompt='Password: ')
+        try:
+            self.auth_manager.login_user(user_name, password)
+            self.context_manager.update_user(self.user_manager.users[user_name])
+            self.context_manager.update_menu('main_menu')
+            self.log(f'User {user_name} logged in successfully!')
+        except InvalidUsername:
+            self.log('Invalid username. Try again or create new user.')
+        except InvalidPassword:
+            self.log('Invalid password.')
+        input('Press enter to continue...')
+
+
+class NewUser(Action):
+    def __init__(self, user_manager):
+        self.password_validator = PasswordValidator()
+        self.user_manager = user_manager
+
+    def _validate_password(self, password: str) -> None:
+        try:
+            self.password_validator.is_valid(password)
+        except ValidationError as e:
+            raise ValueError(f'Password validation failed: {e}')
+
+    def execute(self):
+        clear_screen()
+        self.log('Adding new user...')
+        while True:
+            user_name = input('Please provide new username: ')
+
+            # Try block to handle errors during user creation
+            try:
+                # Password validation loop (username is valid now)
+                while True:
+                    password = stdiomask.getpass(prompt='Please provide your password: ')
+                    try:
+                        self._validate_password(password)  # Validate the password
+                        self.user_manager.add_user(user_name,
+                                                   password)  # Add user (username existence check is done here)
+                        self.log('User added successfully!')
+                        return  # Exit the function once user is successfully added
+                    except ValueError as e:
+                        if "Password validation failed" in str(e):
+                            self.log(f'Error: {e}')
+                            self.log('Please try again with a different password.')
+                        else:
+                            raise  # If it’s a different error, let it bubble up
+            except ValueError as e:
+                # Handle duplicate username error
+                self.log(f'Error: {e}')
+                self.log('Please try again with a different username.')
+
+
+app = Application()
+app.main()

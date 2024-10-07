@@ -12,7 +12,6 @@ def clear_screen() -> None:
 
 
 def get_default_text_editor() -> str:
-
     system = platform.system()
     if system == 'Windows':
         return 'notepad'
