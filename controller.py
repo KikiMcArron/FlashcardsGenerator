@@ -3,7 +3,7 @@ import stdiomask  # type: ignore
 from profiles.manager import UserManager, PasswordValidator, AuthenticationManager
 from ui.ui_manager import ContextManager, MenuManager
 from utils import clear_screen
-from custom_exceptions import ValidationError, InvalidUsername, InvalidPassword
+from custom_exceptions import ValidationError, InvalidUsername, InvalidPassword, UserAlreadyExists
 
 
 class Application:
@@ -81,39 +81,34 @@ class NewUser(Action):
         self.password_validator = PasswordValidator()
         self.user_manager = user_manager
 
+    def execute(self):
+        clear_screen()
+        self.log('Adding new user...')
+        user_name = input('Please provide new username: ')
+        if self.user_manager.user_exists(user_name):
+            self.log(f'User {user_name} already exists, try again with a different name or login for existing user.')
+            input('Press enter to continue...')
+            return
+        while True:
+            password = stdiomask.getpass(prompt='Please provide your password: ')
+            try:
+                self._validate_password(password)
+                self.user_manager.add_user(user_name,
+                                           password)
+                self.log('User added successfully!')
+                return
+            except ValueError as e:
+                if "Password validation failed" in str(e):
+                    self.log(f'Error: {e}')
+                    self.log('Please try again with a different password.')
+                else:
+                    raise
+
     def _validate_password(self, password: str) -> None:
         try:
             self.password_validator.is_valid(password)
         except ValidationError as e:
             raise ValueError(f'Password validation failed: {e}')
-
-    def execute(self):
-        clear_screen()
-        self.log('Adding new user...')
-        while True:
-            user_name = input('Please provide new username: ')
-
-            # Try block to handle errors during user creation
-            try:
-                # Password validation loop (username is valid now)
-                while True:
-                    password = stdiomask.getpass(prompt='Please provide your password: ')
-                    try:
-                        self._validate_password(password)  # Validate the password
-                        self.user_manager.add_user(user_name,
-                                                   password)  # Add user (username existence check is done here)
-                        self.log('User added successfully!')
-                        return  # Exit the function once user is successfully added
-                    except ValueError as e:
-                        if "Password validation failed" in str(e):
-                            self.log(f'Error: {e}')
-                            self.log('Please try again with a different password.')
-                        else:
-                            raise  # If it’s a different error, let it bubble up
-            except ValueError as e:
-                # Handle duplicate username error
-                self.log(f'Error: {e}')
-                self.log('Please try again with a different username.')
 
 
 app = Application()
