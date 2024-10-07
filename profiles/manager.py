@@ -1,7 +1,7 @@
 import re
 from typing import Dict, Optional
 
-from custom_exceptions import InvalidPassword, InvalidUsername, UsernameAlreadyExists, ValidationError
+from custom_exceptions import InvalidPassword, InvalidUsername, UserAlreadyExists, ValidationError
 from profiles.user_profile import User
 
 
@@ -60,19 +60,27 @@ class UserManager:
         self.users: Dict[str, User] = {}
 
     def add_user(self, username: str, password: str) -> None:
-        if username in self.users:
-            raise UsernameAlreadyExists(f'Username {username} already exists')
+        if self.user_exists(username):
+            raise UserAlreadyExists(f'Username {username} already exists')
 
         self.users[username] = User(username, password)
 
     def remove_user(self, username: str) -> None:
-        if username not in self.users:
+        if not self.user_exists(username):
             raise InvalidUsername(f'User {username} does not exist')
         del self.users[username]
 
+    def user_exists(self, username: str) -> bool:
+        return username in self.users
+
+
+class AuthenticationManager:
+    def __init__(self, user_manager: UserManager) -> None:
+        self.user_manager = user_manager
+
     def login_user(self, username: str, password: str) -> None:
         try:
-            user = self.users[username]
+            user = self.user_manager.users[username]
         except KeyError:
             raise InvalidUsername(username)
 
@@ -84,5 +92,5 @@ class UserManager:
         user.is_logged_in = True
 
     def logout_all_users(self) -> None:
-        for user in self.users.values():
+        for user in self.user_manager.users.values():
             user.is_logged_in = False

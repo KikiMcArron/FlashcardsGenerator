@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from custom_exceptions import InvalidPassword, InvalidUsername, UsernameAlreadyExists, ValidationError
+from custom_exceptions import InvalidPassword, InvalidUsername, UserAlreadyExists, ValidationError
 from profiles.manager import PasswordValidator, UserManager
 from profiles.user_profile import User
 
@@ -84,7 +84,7 @@ def test_add_user_success(user_manager, mock_user):
 def test_add_user_duplicate_username(user_manager, mock_user):
     with patch('profiles.user_profile.User', return_value=mock_user):
         user_manager.add_user('new_user', 'Password1!')
-        with pytest.raises(UsernameAlreadyExists, match='Username new_user already exists'):
+        with pytest.raises(UserAlreadyExists, match='Username new_user already exists'):
             user_manager.add_user('new_user', 'Password1!')
 
 

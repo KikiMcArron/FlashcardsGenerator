@@ -23,7 +23,7 @@ class DuplicateServiceError(Exception):
     pass
 
 
-class UsernameAlreadyExists(Exception):
+class UserAlreadyExists(Exception):
     pass
 
 
