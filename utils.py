@@ -1,6 +1,7 @@
 import json
 import os
 import platform
+from typing import Any, Callable, Dict
 
 import bcrypt
 
@@ -29,16 +30,20 @@ def _encrypt(secure_txt: str) -> str:
     return hashed.decode('utf8')
 
 
-def save_to_file(data_dict, file_path) -> None:
-    directory = os.path.dirname(file_path)
-    ensure_dir_exists(directory)
+def save_data_to_file(data: Any, file_path: str, serialize_fn: Callable[[Any, str], None]) -> None:
+    dir_path = os.path.dirname(file_path)
+    create_directory_if_not_exists(dir_path)
+    try:
+        serialize_fn(data, dir_path)
+    except IOError as e:
+        print(f'Saving data to json file failed: {e}')
+
+
+def create_directory_if_not_exists(dir_path: str) -> None:
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path, exist_ok=True)
+
+
+def serialize_dict_to_json(data: Dict, file_path: str) -> None:
     with open(file_path, 'w') as file:
-        if isinstance(data_dict, dict):
-            json.dump(data_dict, file, indent=4)
-        else:
-            file.write(data_dict)
-
-
-def ensure_dir_exists(directory) -> None:
-    if not os.path.exists(directory):
-        os.makedirs(directory, exist_ok=True)
+        json.dump(data, file, indent=4)

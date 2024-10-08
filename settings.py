@@ -1,11 +1,12 @@
-SETTINGS_FILE = 'settings.json'
-
+STORAGE_DIR = 'storage'
 PROFILES_DIR = 'profiles'
+USERS_FILE = 'users.json'
 
-file_types = [
+
+FILE_TYPES = [
     ('Text files', '.txt'),
     ('PDF files', '.pdf'),
     ('All files', '.*')
 ]
 
-openai_models = ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-4', 'gpt-4-turbo-preview']
+OPENAI_MODELS = ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-4', 'gpt-4-turbo-preview']
