@@ -39,11 +39,11 @@ def save_data_to_file(data: Any, file_path: str, serialize_fn: Callable[[Any, st
         print(f'Saving data to json file failed: {e}')
 
 
+def serialize_dict_to_json(data: Dict, file_path: str) -> None:
+    with open(file_path, 'w', encoding='utf-8') as file:
+        json.dump(data, file, indent=4)
+
+
 def create_directory_if_not_exists(dir_path: str) -> None:
     if not os.path.exists(dir_path):
         os.makedirs(dir_path, exist_ok=True)
-
-
-def serialize_dict_to_json(data: Dict, file_path: str) -> None:
-    with open(file_path, 'w') as file:
-        json.dump(data, file, indent=4)
