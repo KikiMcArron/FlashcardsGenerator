@@ -1,8 +1,8 @@
-import json
 import re
 from typing import Dict, Optional
 
 from custom_exceptions import InvalidPassword, InvalidUsername, UserAlreadyExists, ValidationError
+from profiles.security import BcryptEncryption
 from profiles.user_profile import User
 
 
@@ -64,7 +64,7 @@ class UserManager:
         if self.user_exists(username):
             raise UserAlreadyExists(f'Username {username} already exists')
 
-        self.users[username] = User(username, password)
+        self.users[username] = User(username, password, BcryptEncryption())
 
     def remove_user(self, username: str) -> None:
         if not self.user_exists(username):
@@ -85,7 +85,7 @@ class AuthenticationManager:
         except KeyError:
             raise InvalidUsername(username)
 
-        if not user.check_password(password):
+        if not self.password_mach(user, password):
             raise InvalidPassword(username, user)
 
         self.logout_all_users()
@@ -96,11 +96,6 @@ class AuthenticationManager:
         for user in self.user_manager.users.values():
             user.is_logged_in = False
 
-
-class UserRepository:
-    def __init__(self, file_path: str) -> None:
-        self.file_path = file_path
-
-    def save_users(self, users: Dict[str, User]):
-        with open(self.file_path, 'w') as file:
-            json.dump({username: user.as_dict() for username, user in users.items()}, file, indent=4)
+    @staticmethod
+    def password_mach(user: User, password: str) -> bool:
+        return user.encryption_strategy.check_encrypted(password, user.encrypted_password)
