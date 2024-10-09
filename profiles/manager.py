@@ -1,3 +1,4 @@
+import json
 import re
 from typing import Dict, Optional
 
@@ -94,3 +95,12 @@ class AuthenticationManager:
     def logout_all_users(self) -> None:
         for user in self.user_manager.users.values():
             user.is_logged_in = False
+
+
+class UserRepository:
+    def __init__(self, file_path: str) -> None:
+        self.file_path = file_path
+
+    def save_users(self, users: Dict[str, User]):
+        with open(self.file_path, 'w') as file:
+            json.dump({username: user.as_dict() for username, user in users.items()}, file, indent=4)

@@ -1,21 +1,28 @@
-from abc import ABC
-from dataclasses import dataclass, field
+from abc import ABC, abstractmethod
+from typing import Dict
 
-from utils import _encrypt
+from security import EncryptionStrategy
 
 
-@dataclass
 class Credentials(ABC):
-    service_name: str = field(init=False)
+    def __init__(self, service_name: str):
+        self.service_name = service_name
+
+    @abstractmethod
+    def as_dict(self) -> Dict[str, str]:
+        pass
 
 
-@dataclass
 class OpenAICredentials(Credentials):
-    api_key: str
-    gpt_model: str
-    encrypted_api_key: str = field(init=False, repr=False)
+    def __init__(self, api_key: str, gpt_model: str, encryption_strategy: EncryptionStrategy):
+        super().__init__(service_name='OpenAI')
+        self.encryption_strategy = encryption_strategy
+        self.encrypted_api_key = self.encryption_strategy.encrypt(api_key)
+        self.gpt_model = gpt_model
 
-    def __post_init__(self) -> None:
-        self.service_name = 'OpenAI'
-        self.encrypt_api_key = _encrypt(self.api_key)
-        self.api_key = self.encrypt_api_key
+    def as_dict(self):
+        return {
+            'service_name': self.service_name,
+            'encrypted_api_key': self.encrypted_api_key,
+            'gpt_model': self.gpt_model
+        }

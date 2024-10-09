@@ -1,17 +1,21 @@
 from dataclasses import dataclass, field
 from typing import List
 
-import bcrypt
-
 from custom_exceptions import (DuplicateProfileError, DuplicateServiceError, NoCredentialsError, NoProfileError)
 from profiles.credentials import Credentials
-from utils import _encrypt
+from security import EncryptionStrategy
 
 
 @dataclass
 class Profile:
     profile_name: str = 'main'
     credentials: List[Credentials] = field(default_factory=list)
+
+    def as_dict(self) -> dict:
+        return {
+            'profile_name': self.profile_name,
+            'credentials': [credentials.as_dict() for credentials in self.credentials]
+        }
 
     def add_credentials(self, credentials: Credentials) -> None:
         if any(c.service_name == credentials.service_name for c in self.credentials):
@@ -27,14 +31,19 @@ class Profile:
 
 
 class User:
-    def __init__(self, user_name: str, password: str) -> None:
+    def __init__(self, user_name: str, password: str, encryption_strategy: EncryptionStrategy) -> None:
         self.user_name = user_name
-        self.password = _encrypt(password)
+        self.encryption_strategy = encryption_strategy
+        self.encrypted_password = encryption_strategy.encrypt(password)
         self.profiles: List[Profile] = []
         self.is_logged_in = False
 
-    def check_password(self, password: str) -> bool:
-        return bcrypt.checkpw(password.encode('utf8'), self.password.encode('utf8'))
+    def as_dict(self) -> dict:
+        return {
+            'user_name': self.user_name,
+            'encrypted_password': self.encrypted_password,
+            'profiles': [profile.as_dict() for profile in self.profiles]
+        }
 
     def add_profile(self, profile: Profile) -> None:
         if any(p.profile_name == profile.profile_name for p in self.profiles):
