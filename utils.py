@@ -11,6 +11,7 @@ clear_command = 'cls' if os.name == 'nt' else 'clear'
 def clear_screen() -> None:
     os.system(clear_command)
 
+
 def get_default_text_editor() -> str:
     system = platform.system()
     if system == 'Windows':
@@ -23,12 +24,6 @@ def get_default_text_editor() -> str:
         raise RuntimeError('Unsupported operating system.')
 
 
-def _encrypt(secure_txt: str) -> str:
-    salt = bcrypt.gensalt()
-    hashed = bcrypt.hashpw(secure_txt.encode('utf8'), salt)
-    return hashed.decode('utf8')
-
-
 def save_data_to_file(data: Any, file_path: str, serialize_fn: Callable[[Any, str], None]) -> None:
     dir_path = os.path.dirname(file_path)
     create_directory_if_not_exists(dir_path)
@@ -39,7 +34,7 @@ def save_data_to_file(data: Any, file_path: str, serialize_fn: Callable[[Any, st
 
 
 def serialize_dict_to_json(data: Dict, file_path: str) -> None:
-    with open(file_path, 'w+', encoding='utf-8') as file:
+    with open(file_path, 'w', encoding='utf-8') as file:
         json.dump(data, file, indent=4)
 
 
