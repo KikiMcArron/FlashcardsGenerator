@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
 from typing import List
 
-from custom_exceptions import (DuplicateProfileError, DuplicateServiceError, NoCredentialsError, NoProfileError)
+from custom_exceptions import DuplicateProfileError, DuplicateServiceError, NoCredentialsError, NoProfileError
 from profiles.credentials import Credentials
-from security import EncryptionStrategy
+from profiles.security import EncryptionStrategy
 
 
 @dataclass

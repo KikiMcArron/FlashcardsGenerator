@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict
 
-from security import EncryptionStrategy
+from profiles.security import EncryptionStrategy
 
 
 class Credentials(ABC):

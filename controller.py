@@ -96,6 +96,7 @@ class NewUser(Action):
                 self.user_manager.add_user(user_name,
                                            password)
                 self.log('User added successfully!')
+                input('Press enter to continue...')
                 return
             except ValueError as e:
                 if "Password validation failed" in str(e):
