@@ -1,82 +1,40 @@
-import re
-from typing import Dict, Optional
+from typing import Dict
 
-from custom_exceptions import InvalidPassword, InvalidUsername, UserAlreadyExists, ValidationError
-from profiles.security import BcryptEncryption
+from custom_exceptions import InvalidPassword, InvalidUsername, UserAlreadyExists
+from profiles.security import EncryptionStrategy
 from profiles.user_profile import User
 
 
-class PasswordValidator:
-    def __init__(self, min_length: int = 6, max_length: Optional[int] = None, numbers: bool = True,
-                 special: bool = True,
-                 upper_lower: bool = True):
-        self.min_length = min_length
-        self.max_length = max_length
-        self.numbers = numbers
-        self.special = special
-        self.upper_lower = upper_lower
-
-    def _is_valid_size(self, password: str) -> bool:
-        if self.max_length is not None:
-            if not self.min_length <= len(password) <= self.max_length:
-                raise ValidationError(f'Password length have to be between {self.min_length} and {self.max_length} '
-                                      f'characters')
-        elif self.min_length >= len(password):
-            raise ValidationError(f'Password length should be at least {self.min_length} characters')
-        return True
-
-    def _contains_numbers(self, password: str) -> bool:
-        if self.numbers and not re.search('[0-9]', password):
-            raise ValidationError('Password must contain at least one number')
-        return True
-
-    def _contains_special_characters(self, password: str) -> bool:
-        if self.special and not re.search(r'[^a-zA-Z0-9\s]', password):
-            raise ValidationError('Password must contain at least one special character')
-        return True
-
-    def _contains_upper_and_lower(self, password: str) -> bool:
-        if self.upper_lower:
-            if not (re.search('[a-z]', password) and re.search('[A-Z]', password)):
-                raise ValidationError('Password must contain at least one lowercase and one uppercase letter')
-        return True
-
-    @staticmethod
-    def _contains_no_whitespaces(password: str) -> bool:
-        if re.search(r'\s', password):
-            raise ValidationError('Password cannot contain whitespaces')
-        return True
-
-    def is_valid(self, password: str) -> bool:
-        self._is_valid_size(password)
-        self._contains_numbers(password)
-        self._contains_special_characters(password)
-        self._contains_upper_and_lower(password)
-        self._contains_no_whitespaces(password)
-        return True
-
-
 class UserManager:
-    def __init__(self) -> None:
+    def __init__(self, encryption_strategy: EncryptionStrategy) -> None:
         self.users: Dict[str, User] = {}
+        self.encryption_strategy = encryption_strategy
 
     def add_user(self, username: str, password: str) -> None:
         if self.user_exists(username):
             raise UserAlreadyExists(f'Username {username} already exists')
 
-        self.users[username] = User(username, password, BcryptEncryption())
+        encrypted_password = self.encryption_strategy.encrypt(password)
+        new_user = User(username, encrypted_password)
+        self.users[username] = new_user
 
     def remove_user(self, username: str) -> None:
         if not self.user_exists(username):
             raise InvalidUsername(f'User {username} does not exist')
         del self.users[username]
 
+    def get_user(self, username: str) -> User:
+        user = self.users.get(username)
+        if user is None:
+            raise InvalidUsername(f'User {username} does not exist.')
+        return user
+
     def user_exists(self, username: str) -> bool:
         return username in self.users
 
 
 class AuthenticationManager:
-    def __init__(self, user_manager: UserManager) -> None:
+    def __init__(self,  user_manager: UserManager) -> None:
         self.user_manager = user_manager
 
     def login_user(self, username: str, password: str) -> None:
@@ -85,7 +43,7 @@ class AuthenticationManager:
         except KeyError:
             raise InvalidUsername(username)
 
-        if not self.password_mach(user, password):
+        if not self.password_match(user, password):
             raise InvalidPassword(username, user)
 
         self.logout_all_users()
@@ -96,6 +54,5 @@ class AuthenticationManager:
         for user in self.user_manager.users.values():
             user.is_logged_in = False
 
-    @staticmethod
-    def password_mach(user: User, password: str) -> bool:
-        return user.encryption_strategy.check_encrypted(password, user.encrypted_password)
+    def password_match(self, user: User, password: str) -> bool:
+        return self.user_manager.encryption_strategy.check_encrypted(password, user.encrypted_password)
