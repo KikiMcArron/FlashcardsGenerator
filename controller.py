@@ -1,19 +1,23 @@
 import stdiomask  # type: ignore
 
-from profiles.manager import UserManager, PasswordValidator, AuthenticationManager
+from profiles.manager import UserManager, AuthenticationManager
+from profiles.security import PasswordValidator, Bcrypt
 from ui.ui_manager import ContextManager, MenuManager
 from utils import clear_screen
 from custom_exceptions import ValidationError, InvalidUsername, InvalidPassword, UserAlreadyExists
+from settings import USERS_FILE, STORAGE_DIR
 
 
 class Application:
     def __init__(self):
         self.context_manager = ContextManager()
         self.menu_manager = MenuManager(self.context_manager)
-        self.user_manager = UserManager()
+        self.encryption_strategy = Bcrypt()
+        self.user_manager = UserManager(self.encryption_strategy)
         self.auth_manager = AuthenticationManager(self.user_manager)
         self.action_dispatcher = {
-            'login': LogIn(self.context_manager, self.user_manager, self.auth_manager),
+            'login': LogIn(self.context_manager, self.auth_manager),
+            'logout': LogOut(self.context_manager, self.auth_manager),
             'new_user': NewUser(self.user_manager)
             # 'new_profile': AddNewProfile(self, self.profile_manager),
             # 'select_profile': SelectProfile(self, self.profile_manager),
@@ -51,18 +55,19 @@ class Action:
 
 
 class LogIn(Action):
-    def __init__(self,
-                 context_manager: ContextManager,
-                 user_manager: UserManager,
-                 auth_manager: AuthenticationManager):
+    def __init__(self, context_manager: ContextManager, auth_manager: AuthenticationManager) -> None:
         self.context_manager = context_manager
-        self.user_manager = user_manager
         self.auth_manager = auth_manager
+        self.user_manager = self.auth_manager.user_manager
 
     def execute(self):
         clear_screen()
         self.log('Logging in...')
         user_name = input('Username: ')
+        if not self.user_manager.user_exists(user_name):
+            self.log(f'User "{user_name}" doesn\'t exists, try again with a different user name or create new user.')
+            input('Press enter to continue...')
+            return
         password = stdiomask.getpass(prompt='Password: ')
         try:
             self.auth_manager.login_user(user_name, password)
@@ -76,8 +81,22 @@ class LogIn(Action):
         input('Press enter to continue...')
 
 
+class LogOut(Action):
+    def __init__(self, context_manager: ContextManager, auth_manager: AuthenticationManager) -> None:
+        self.context_manager = context_manager
+        self.auth_manager = auth_manager
+
+    def execute(self):
+        clear_screen()
+        self.log('Logging out...')
+        self.auth_manager.logout_all_users()
+        self.log('Logged out successfully!')
+        self.context_manager.update_menu('log_menu')
+        input('Press enter to continue...')
+
+
 class NewUser(Action):
-    def __init__(self, user_manager):
+    def __init__(self, user_manager: UserManager) -> None:
         self.password_validator = PasswordValidator()
         self.user_manager = user_manager
 
