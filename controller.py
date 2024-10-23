@@ -1,12 +1,12 @@
 import stdiomask  # type: ignore
 
-from profiles.manager import UserManager, AuthenticationManager
-from profiles.security import PasswordValidator, Bcrypt
+from custom_exceptions import InvalidPassword, ValidationError
+from profiles.manager import AuthenticationManager, UserManager
 from profiles.repository import JSONStorage
+from profiles.security import Bcrypt, PasswordValidator
+from settings import STORAGE_DIR, USERS_FILE
 from ui.ui_manager import ContextManager, MenuManager
 from utils import clear_screen
-from custom_exceptions import ValidationError, InvalidUsername, InvalidPassword
-from settings import USERS_FILE, STORAGE_DIR
 
 
 class Application:
@@ -20,7 +20,8 @@ class Application:
         self.action_dispatcher = {
             'login': LogIn(self.context_manager, self.auth_manager),
             'logout': LogOut(self.context_manager, self.auth_manager),
-            'new_user': NewUser(self.user_manager)
+            'new_user': NewUser(self.user_manager),
+            'remove_user': RemoveUser(self.auth_manager)
             # 'new_profile': AddNewProfile(self, self.profile_manager),
             # 'select_profile': SelectProfile(self, self.profile_manager),
             # 'edit_profile': EditProfile(self, self.profile_manager),
@@ -39,6 +40,7 @@ class Application:
             self.menu_manager.display_menu()
             user_input = input('>>>>> ')
             action_key = self.menu_manager.process_input(user_input)
+            clear_screen()
             self._execute_action(action_key)
             clear_screen()
 
@@ -63,7 +65,6 @@ class LogIn(Action):
         self.user_manager = self.auth_manager.user_manager
 
     def execute(self):
-        clear_screen()
         self.log('Logging in...')
         user_name = input('Username: ')
         if not self.user_manager.user_exists(user_name):
@@ -76,8 +77,6 @@ class LogIn(Action):
             self.context_manager.update_user(self.user_manager.users[user_name])
             self.context_manager.update_menu('main_menu')
             self.log(f'User {user_name} logged in successfully!')
-        except InvalidUsername:
-            self.log('Invalid username. Try again or create new user.')
         except InvalidPassword:
             self.log('Invalid password.')
         input('Press enter to continue...')
@@ -89,7 +88,6 @@ class LogOut(Action):
         self.auth_manager = auth_manager
 
     def execute(self):
-        clear_screen()
         self.log('Logging out...')
         self.auth_manager.logout_all_users()
         self.log('Logged out successfully!')
@@ -103,7 +101,6 @@ class NewUser(Action):
         self.user_manager = user_manager
 
     def execute(self):
-        clear_screen()
         self.log('Adding new user...')
         user_name = input('Please provide new username: ')
         if self.user_manager.user_exists(user_name):
@@ -111,6 +108,7 @@ class NewUser(Action):
             input('Press enter to continue...')
             return
         while True:
+            # TODO: Add double check password functionality
             password = stdiomask.getpass(prompt='Please provide your password: ')
             try:
                 self._validate_password(password)
@@ -130,6 +128,29 @@ class NewUser(Action):
             self.password_validator.is_valid(password)
         except ValidationError as e:
             raise ValueError(f'Password validation failed: {e}')
+
+
+class RemoveUser(Action):
+    def __init__(self, auth_manager: AuthenticationManager) -> None:
+        self.auth_manager = auth_manager
+        self.user_manager = self.auth_manager.user_manager
+
+    def execute(self):
+        self.log('Removing user...')
+        user_name = input('Please provide username to remove: ')
+        if not self.user_manager.user_exists(user_name):
+            self.log(f'User "{user_name}" doesn\'t exists.')
+            input('Press enter to continue...')
+            return
+        password = stdiomask.getpass(prompt=f'Please provide password for user "{user_name}": ')
+        if not self.auth_manager.password_match(self.user_manager.users[user_name], password):
+            self.log('Invalid password.')
+            input('Press enter to continue...')
+            return
+        # TODO: Add confirmation of user deletion.
+        self.user_manager.remove_user(user_name)
+        self.log(f'User "{user_name}" removed successful.')
+        input('Press enter to continue...')
 
 
 app = Application()
