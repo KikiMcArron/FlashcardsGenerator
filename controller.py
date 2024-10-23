@@ -2,9 +2,10 @@ import stdiomask  # type: ignore
 
 from profiles.manager import UserManager, AuthenticationManager
 from profiles.security import PasswordValidator, Bcrypt
+from profiles.repository import JSONStorage
 from ui.ui_manager import ContextManager, MenuManager
 from utils import clear_screen
-from custom_exceptions import ValidationError, InvalidUsername, InvalidPassword, UserAlreadyExists
+from custom_exceptions import ValidationError, InvalidUsername, InvalidPassword
 from settings import USERS_FILE, STORAGE_DIR
 
 
@@ -13,7 +14,8 @@ class Application:
         self.context_manager = ContextManager()
         self.menu_manager = MenuManager(self.context_manager)
         self.encryption_strategy = Bcrypt()
-        self.user_manager = UserManager(self.encryption_strategy)
+        self.storage = JSONStorage(f'{STORAGE_DIR}/{USERS_FILE}')
+        self.user_manager = UserManager(self.encryption_strategy, self.storage)
         self.auth_manager = AuthenticationManager(self.user_manager)
         self.action_dispatcher = {
             'login': LogIn(self.context_manager, self.auth_manager),
@@ -112,8 +114,7 @@ class NewUser(Action):
             password = stdiomask.getpass(prompt='Please provide your password: ')
             try:
                 self._validate_password(password)
-                self.user_manager.add_user(user_name,
-                                           password)
+                self.user_manager.add_user(user_name, password)
                 self.log('User added successfully!')
                 input('Press enter to continue...')
                 return
