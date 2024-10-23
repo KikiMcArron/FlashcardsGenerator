@@ -3,31 +3,28 @@ from abc import ABC, abstractmethod
 from typing import Dict
 import json
 
-from profiles.user_profile import User
 
-
-class UserStorageInterface(ABC):
+class StorageInterface(ABC):
     @abstractmethod
-    def save_users_data(self, users: Dict[str, User]) -> None:
+    def save_data(self, users: Dict[str, dict]) -> None:
         pass
 
     @abstractmethod
-    def load_users(self) -> Dict[str, str]:
+    def load_data(self) -> Dict[str, dict]:
         pass
 
 
-class JSONUserStorage(UserStorageInterface):
-    def __init__(self, file_path):
+class JSONStorage(StorageInterface):
+    def __init__(self, file_path: str) -> None:
         self.file_path = file_path
 
-    def save_users_data(self, users: Dict[str, User]) -> None:
+    def save_data(self, users: Dict[str, dict]) -> None:
         dir_path = os.path.dirname(self.file_path)
         self.create_directory_if_not_exists(dir_path)
-        data_dict = {username: user.as_dict() for username, user in users.items()}
         with open(self.file_path, 'w') as file:
-            json.dump(data_dict, file, indent=4)
+            json.dump(users, file, indent=4)
 
-    def load_users(self) -> Dict[str, str]:
+    def load_data(self) -> Dict[str, dict]:
         try:
             with open(self.file_path, 'r') as file:
                 users_dict = json.load(file)

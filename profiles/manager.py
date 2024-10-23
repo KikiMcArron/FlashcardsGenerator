@@ -2,13 +2,25 @@ from typing import Dict
 
 from custom_exceptions import InvalidPassword, InvalidUsername, UserAlreadyExists
 from profiles.security import EncryptionStrategy
+from profiles.repository import StorageInterface
 from profiles.user_profile import User
 
 
 class UserManager:
-    def __init__(self, encryption_strategy: EncryptionStrategy) -> None:
+    def __init__(self, encryption_strategy: EncryptionStrategy, storage: StorageInterface) -> None:
         self.users: Dict[str, User] = {}
         self.encryption_strategy = encryption_strategy
+        self.storage = storage
+        self.load_users()
+
+    def load_users(self) -> None:
+        users_data_dict = self.storage.load_data()
+        for username, users_data_dict in users_data_dict.items():
+            self.users[username] = User.from_dict(users_data_dict)
+
+    def save_users(self) -> None:
+        users_data_dict = {username: user.as_dict() for username, user in self.users.items()}
+        self.storage.save_data(users_data_dict)
 
     def add_user(self, username: str, password: str) -> None:
         if self.user_exists(username):
@@ -17,17 +29,18 @@ class UserManager:
         encrypted_password = self.encryption_strategy.encrypt(password)
         new_user = User(username, encrypted_password)
         self.users[username] = new_user
+        self.save_users()
 
     def remove_user(self, username: str) -> None:
         if not self.user_exists(username):
             raise InvalidUsername(f'User {username} does not exist')
         del self.users[username]
+        self.save_users()
 
     def get_user(self, username: str) -> User:
-        user = self.users.get(username)
-        if user is None:
+        if not self.user_exists(username):
             raise InvalidUsername(f'User {username} does not exist.')
-        return user
+        return self.users[username]
 
     def user_exists(self, username: str) -> bool:
         return username in self.users
