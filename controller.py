@@ -1,6 +1,8 @@
 import stdiomask  # type: ignore
+import sys
 
-from custom_exceptions import InvalidPassword, ValidationError
+from custom_exceptions import InvalidPassword, ValidationError, DuplicateProfileError
+from profiles.user_profile import Profile
 from profiles.manager import AuthenticationManager, UserManager
 from profiles.repository import JSONStorage
 from profiles.security import Bcrypt, PasswordValidator
@@ -21,8 +23,8 @@ class Application:
             'login': LogIn(self.context_manager, self.auth_manager),
             'logout': LogOut(self.context_manager, self.auth_manager),
             'new_user': NewUser(self.user_manager),
-            'remove_user': RemoveUser(self.auth_manager)
-            # 'new_profile': AddNewProfile(self, self.profile_manager),
+            'remove_user': RemoveUser(self.auth_manager),
+            'new_profile': NewProfile(self.context_manager, self.user_manager),
             # 'select_profile': SelectProfile(self, self.profile_manager),
             # 'edit_profile': EditProfile(self, self.profile_manager),
             # 'select_source_note': SelectSource(self),
@@ -30,7 +32,7 @@ class Application:
             # 'source_notion': '',
             # 'generate_cards': GenerateCards(self),
             # 'main_menu': BackToMainMenu(self),
-            # 'exit': ExitProgram(self, self.profile_manager)
+            'exit': Exit(self.auth_manager)
         }
 
     def main(self):
@@ -41,6 +43,8 @@ class Application:
             user_input = input('>>>>> ')
             action_key = self.menu_manager.process_input(user_input)
             clear_screen()
+            if not action_key:
+                continue
             self._execute_action(action_key)
             clear_screen()
 
@@ -62,20 +66,23 @@ class LogIn(Action):
     def __init__(self, context_manager: ContextManager, auth_manager: AuthenticationManager) -> None:
         self.context_manager = context_manager
         self.auth_manager = auth_manager
-        self.user_manager = self.auth_manager.user_manager
 
     def execute(self):
+        # TODO: Add annotation if there is no user created.
         self.log('Logging in...')
+        user_manager = self.auth_manager.user_manager
         user_name = input('Username: ')
-        if not self.user_manager.user_exists(user_name):
+        if not user_manager.user_exists(user_name):
             self.log(f'User "{user_name}" doesn\'t exists, try again with a different user name or create new user.')
             input('Press enter to continue...')
             return
         password = stdiomask.getpass(prompt='Password: ')
         try:
             self.auth_manager.login_user(user_name, password)
-            self.context_manager.update_user(self.user_manager.users[user_name])
-            self.context_manager.update_menu('main_menu')
+            self.context_manager.current_user = user_manager.users[user_name]
+            self.context_manager.current_menu = 'main_menu'
+            if self.context_manager.current_user.profiles:
+                self.context_manager.current_stage = 'no_profile_selected'
             self.log(f'User {user_name} logged in successfully!')
         except InvalidPassword:
             self.log('Invalid password.')
@@ -87,11 +94,12 @@ class LogOut(Action):
         self.context_manager = context_manager
         self.auth_manager = auth_manager
 
-    def execute(self):
+    def execute(self) -> None:
         self.log('Logging out...')
-        self.auth_manager.logout_all_users()
+        self.auth_manager.logout_users()
         self.log('Logged out successfully!')
-        self.context_manager.update_menu('log_menu')
+        self.context_manager.current_menu = 'log_menu'
+        self.context_manager.current_user = None
         input('Press enter to continue...')
 
 
@@ -100,9 +108,13 @@ class NewUser(Action):
         self.password_validator = PasswordValidator()
         self.user_manager = user_manager
 
-    def execute(self):
+    def execute(self) -> None:
         self.log('Adding new user...')
         user_name = input('Please provide new username: ')
+        if not user_name:
+            self.log('User name can\'t be empty.')
+            input('Press enter to continue...')
+            return
         if self.user_manager.user_exists(user_name):
             self.log(f'User {user_name} already exists, try again with a different name or login for existing user.')
             input('Press enter to continue...')
@@ -135,7 +147,7 @@ class RemoveUser(Action):
         self.auth_manager = auth_manager
         self.user_manager = self.auth_manager.user_manager
 
-    def execute(self):
+    def execute(self) -> None:
         self.log('Removing user...')
         user_name = input('Please provide username to remove: ')
         if not self.user_manager.user_exists(user_name):
@@ -151,6 +163,49 @@ class RemoveUser(Action):
         self.user_manager.remove_user(user_name)
         self.log(f'User "{user_name}" removed successful.')
         input('Press enter to continue...')
+
+
+class NewProfile(Action):
+    def __init__(self, context_manager: ContextManager, user_manager: UserManager):
+        self.context_manager = context_manager
+        self.user_manager = user_manager
+
+    def execute(self):
+        current_user = self.context_manager.current_user
+        profile_name = input('Provide New Profile name: ')
+        if not profile_name:
+            self.log('Profile name can\'t be empty.')
+            input('Press enter to continue...')
+            return
+        try:
+            current_user.add_profile(Profile(profile_name))
+            self.context_manager.current_stage = 'no_profile_selected'
+            self.user_manager.save_users()
+            self.log(f'Profile "{profile_name}" created successful.')
+            input('Press enter to continue...')
+            return
+        except DuplicateProfileError:
+            self.log(f'Profile "{profile_name}" already exist.\nTry other profile name or use exist profile.''')
+            input('Press enter to continue...')
+            return
+
+
+class Exit(Action):
+    def __init__(self, auth_manager: AuthenticationManager) -> None:
+        self.auth_manager = auth_manager
+
+    def execute(self) -> None:
+        while True:
+            answer = input('Are you sure you want quit? (Y/N) ').strip().upper()
+            if answer == 'Y':
+                self.auth_manager.logout_users()
+                sys.exit()
+            if answer == 'N':
+                break
+            else:
+                print('Invalid answer, select "Y" or "N".')
+                input('Press Enter to continue...')
+                clear_screen()
 
 
 app = Application()
