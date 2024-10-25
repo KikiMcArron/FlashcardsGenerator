@@ -11,7 +11,6 @@ class UserManager:
         self.users: Dict[str, User] = {}
         self.encryption_strategy = encryption_strategy
         self.storage = storage
-        self.active_user: Optional[User] = None
         self.load_users()
 
     def load_users(self) -> None:
