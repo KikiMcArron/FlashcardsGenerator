@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 from custom_exceptions import InvalidPassword, InvalidUsername, UserAlreadyExists
 from profiles.security import EncryptionStrategy
@@ -11,6 +11,7 @@ class UserManager:
         self.users: Dict[str, User] = {}
         self.encryption_strategy = encryption_strategy
         self.storage = storage
+        self.active_user: Optional[User] = None
         self.load_users()
 
     def load_users(self) -> None:
@@ -59,11 +60,11 @@ class AuthenticationManager:
         if not self.password_match(user, password):
             raise InvalidPassword(username, user)
 
-        self.logout_all_users()
+        self.logout_users()
 
         user.is_logged_in = True
 
-    def logout_all_users(self) -> None:
+    def logout_users(self) -> None:
         for user in self.user_manager.users.values():
             user.is_logged_in = False
 

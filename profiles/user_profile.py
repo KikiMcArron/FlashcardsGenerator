@@ -63,7 +63,7 @@ class User:
         return user
 
     def add_profile(self, profile: Profile) -> None:
-        if any(p.profile_name == profile.profile_name for p in self.profiles):
+        if self.profile_exists(profile):
             raise DuplicateProfileError(f'Profile {profile.profile_name} already exists for User {self.user_name}')
         self.profiles.append(profile)
 
@@ -72,3 +72,6 @@ class User:
             self.profiles.remove(profile)
         except ValueError:
             raise NoProfileError(f'Profile {profile.profile_name} does not exist for user {self.user_name}')
+
+    def profile_exists(self, profile: Profile) -> bool:
+        return any(p.profile_name == profile.profile_name for p in self.profiles)
