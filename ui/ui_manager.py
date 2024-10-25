@@ -1,31 +1,20 @@
+from dataclasses import dataclass, field
 from typing import Optional, List
 from ui.menu_items import menu_list, stages
 from profiles.user_profile import User, Profile
 
 
+@dataclass
 class ContextManager:
-    def __init__(self) -> None:
-        self.current_menu: str = 'log_menu'
-        self.current_stage: str = 'initiation'
-        self.current_user: Optional[User] = None
-        self.current_profile: Optional[Profile] = None
-
-    def update_menu(self, new_menu: str) -> None:
-        self.current_menu = new_menu
-
-    def update_stage(self, new_stage: str) -> None:
-        self.current_stage = new_stage
-
-    def update_user(self, user: User) -> None:
-        self.current_user = user
-
-    def update_profile(self, profile: Profile) -> None:
-        self.current_profile = profile
+    current_menu: str = 'log_menu'
+    current_stage: str = 'initiation'
+    current_user: Optional[User] = None
+    current_profile: Optional[Profile] = None
 
 
 class MenuManager:
-    def __init__(self, context: ContextManager) -> None:
-        self.context = context
+    def __init__(self, context_manager: ContextManager) -> None:
+        self.context_manager = context_manager
         self.menu_items: List[str] = []
 
     def display_menu(self) -> None:
@@ -34,7 +23,12 @@ class MenuManager:
             print(item)
 
     def process_input(self, input_value: str) -> Optional[str]:
-        current_menu = self.context.current_menu
+        if not input_value.strip():
+            print('No option selected. Please provide input.')
+            input('Press Enter to continue...')
+            return None
+
+        current_menu = self.context_manager.current_menu
         menu_items_dict = menu_list[current_menu]
         input_to_action_key = {v: k for k, v in menu_items_dict.items()}
         selected_item = next((item for item in self.menu_items if item.startswith(input_value)), None)
@@ -43,13 +37,13 @@ class MenuManager:
             action_key = input_to_action_key[selected_item]
             return action_key
 
-        print(f'Option {input_value} is not available. Press Enter to continue...')
-        input()
+        print(f'Option {input_value} is not available.')
+        input('Press Enter to continue...')
         return None
 
     def _build_menu_items(self) -> list[str]:
-        current_menu: str = self.context.current_menu
-        current_stage: str = self.context.current_stage
+        current_menu: str = self.context_manager.current_menu
+        current_stage: str = self.context_manager.current_stage
 
         menu_items_dict: dict[str, str] = self._get_menu_list(current_menu)
 

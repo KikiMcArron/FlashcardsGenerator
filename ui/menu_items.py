@@ -20,8 +20,8 @@ source_menu = {
     'source_file': '1. Select the note from file (.txt)',
     'source_notion': '2. Select Notion note (coming soon)',
     'main_menu': '8. Back to main menu',
-    'logout': '9. Logout current user',
-    'exit': '0. Quit program'
+    'logout': '9. Logout',
+    'exit': '0. Quit'
 }
 
 menu_list = {
