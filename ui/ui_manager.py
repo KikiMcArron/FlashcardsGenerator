@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional, List
 from ui.menu_items import menu_list, stages
 from profiles.user_profile import User, Profile
@@ -42,10 +42,10 @@ class MenuManager:
         return None
 
     def _build_menu_items(self) -> list[str]:
-        current_menu: str = self.context_manager.current_menu
-        current_stage: str = self.context_manager.current_stage
+        current_menu = self.context_manager.current_menu
+        current_stage = self.context_manager.current_stage
 
-        menu_items_dict: dict[str, str] = self._get_menu_list(current_menu)
+        menu_items_dict = self._get_menu_list(current_menu)
 
         if all(item in menu_items_dict for item in stages[current_stage]):
             return self._filtered_menu_by_stage(menu_items_dict, current_stage)
@@ -64,3 +64,4 @@ class MenuManager:
             return [menu_items_dict[item_id] for item_id in stages[current_stage]]
         except KeyError:
             raise ValueError(f'Stage "{current_stage}" not found.')
+

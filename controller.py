@@ -25,7 +25,7 @@ class Application:
             'new_user': NewUser(self.user_manager),
             'remove_user': RemoveUser(self.auth_manager),
             'new_profile': NewProfile(self.context_manager, self.user_manager),
-            # 'select_profile': SelectProfile(self, self.profile_manager),
+            'select_profile': SelectProfile(self.context_manager),
             # 'edit_profile': EditProfile(self, self.profile_manager),
             # 'select_source_note': SelectSource(self),
             # 'source_file': SourceFile(self),
@@ -38,6 +38,10 @@ class Application:
     def main(self):
         clear_screen()
         while True:
+            if self.context_manager.current_user:
+                print('###########################################################')
+                print(f'                Active user: "{self.context_manager.current_user.user_name}".')
+                print('###########################################################\n')
             print('Select your action:')
             self.menu_manager.display_menu()
             user_input = input('>>>>> ')
@@ -67,10 +71,13 @@ class LogIn(Action):
         self.context_manager = context_manager
         self.auth_manager = auth_manager
 
-    def execute(self):
-        # TODO: Add annotation if there is no user created.
-        self.log('Logging in...')
+    def execute(self) -> None:
         user_manager = self.auth_manager.user_manager
+        if not user_manager.users:
+            self.log('No users! Please create new user first.')
+            input('Press enter to continue...')
+            return
+        self.log('Logging in...')
         user_name = input('Username: ')
         if not user_manager.user_exists(user_name):
             self.log(f'User "{user_name}" doesn\'t exists, try again with a different user name or create new user.')
@@ -145,32 +152,37 @@ class NewUser(Action):
 class RemoveUser(Action):
     def __init__(self, auth_manager: AuthenticationManager) -> None:
         self.auth_manager = auth_manager
-        self.user_manager = self.auth_manager.user_manager
 
     def execute(self) -> None:
+        user_manager = self.auth_manager.user_manager
+        if not user_manager.users:
+            self.log('No users! Please create new user first.')
+            input('Press enter to continue...')
+            return
         self.log('Removing user...')
         user_name = input('Please provide username to remove: ')
-        if not self.user_manager.user_exists(user_name):
+        if not user_manager.user_exists(user_name):
             self.log(f'User "{user_name}" doesn\'t exists.')
             input('Press enter to continue...')
             return
         password = stdiomask.getpass(prompt=f'Please provide password for user "{user_name}": ')
-        if not self.auth_manager.password_match(self.user_manager.users[user_name], password):
+        if not self.auth_manager.password_match(user_manager.users[user_name], password):
             self.log('Invalid password.')
             input('Press enter to continue...')
             return
         # TODO: Add confirmation of user deletion.
-        self.user_manager.remove_user(user_name)
+        user_manager.remove_user(user_name)
         self.log(f'User "{user_name}" removed successful.')
         input('Press enter to continue...')
 
 
 class NewProfile(Action):
-    def __init__(self, context_manager: ContextManager, user_manager: UserManager):
+    def __init__(self, context_manager: ContextManager, user_manager: UserManager) -> None:
         self.context_manager = context_manager
         self.user_manager = user_manager
 
     def execute(self):
+        self.log('Adding new profile...')
         current_user = self.context_manager.current_user
         profile_name = input('Provide New Profile name: ')
         if not profile_name:
@@ -179,8 +191,11 @@ class NewProfile(Action):
             return
         try:
             current_user.add_profile(Profile(profile_name))
-            self.context_manager.current_stage = 'no_profile_selected'
             self.user_manager.save_users()
+            if self.context_manager.current_profile:
+                self.context_manager.current_stage = 'profile_selected'
+            else:
+                self.context_manager.current_stage = 'no_profile_selected'
             self.log(f'Profile "{profile_name}" created successful.')
             input('Press enter to continue...')
             return
@@ -188,6 +203,24 @@ class NewProfile(Action):
             self.log(f'Profile "{profile_name}" already exist.\nTry other profile name or use exist profile.''')
             input('Press enter to continue...')
             return
+
+
+class SelectProfile(Action):
+    def __init__(self, context_manager: ContextManager) -> None:
+        self.context_manager = context_manager
+
+    def execute(self):
+        self.log('Profile selection...')
+        profile_name = input('Please provide profile name: ')
+        if not self.context_manager.current_user.profile_exists(Profile(profile_name)):
+            self.log(f'Profile "{profile_name}" does\'t exists, try again with a different profile name or create new.')
+            input('Press enter to continue...')
+            return
+        self.context_manager.current_profile = Profile(profile_name)
+        self.context_manager.current_stage = 'profile_selected'
+        self.log(f'Profile "{profile_name}" selected.')
+        input('Press enter to continue...')
+        return
 
 
 class Exit(Action):
