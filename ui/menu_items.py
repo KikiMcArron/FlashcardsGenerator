@@ -6,13 +6,29 @@ log_menu = {
 }
 
 main_menu = {
+    'profile_menu': '1. Manage profiles',
+    'ai_menu': '2. Configure AI',
+    'note_menu': '3. Select source note',
+    'generate_cards': '4. Generate flashcards',
+    'work_with_cards': '5. Work with flashcards',
+    'logout': '9. Logout',
+    'exit': '0. Quit program'
+}
+
+profile_menu = {
     'new_profile': '1. Add new profile',
     'select_profile': '2. Select profile',
     'edit_profile': '3. Edit profile',
-    'select_source_note': '4. Select source note',
-    'generate_cards': '5. Generate flashcards',
-    'work_with_cards': '6. Work with flashcards',
-    'logout': '9. Logout current user',
+    'main_menu': '8. Back to main menu',
+    'logout': '9. Logout',
+    'exit': '0. Quit program'
+}
+
+ai_menu = {
+    'open_ai': '1. Setup OpenAI',
+    'notion': '2. Setup Notion (coming soon)',
+    'main_menu': '8. Back to main menu',
+    'logout': '9. Logout',
     'exit': '0. Quit program'
 }
 
@@ -21,21 +37,21 @@ source_menu = {
     'source_notion': '2. Select Notion note (coming soon)',
     'main_menu': '8. Back to main menu',
     'logout': '9. Logout',
-    'exit': '0. Quit'
+    'exit': '0. Quit program'
 }
 
 menu_list = {
     'log_menu': log_menu,
     'main_menu': main_menu,
+    'profiles_menu': profile_menu,
+    'ai_menu': ai_menu,
     'source_menu': source_menu
 }
 
 stages = {
-    'initiation': ['new_profile', 'logout', 'exit'],
-    'no_profile_selected': ['new_profile', 'select_profile', 'edit_profile', 'logout', 'exit'],
-    'profile_selected': ['new_profile', 'select_profile', 'edit_profile', 'select_source_note', 'logout', 'exit'],
-    'note_selected': ['new_profile', 'select_profile', 'edit_profile', 'select_source_note', 'generate_cards',
-                      'logout', 'exit'],
-    'cards_generated': ['new_profile', 'select_profile', 'edit_profile', 'select_source_note', 'generate_cards',
-                        'work_with_cards', 'logout', 'exit']
+    'no_profile_selected': ['profile_menu', 'logout', 'exit'],
+    'no_ai': ['profile_menu', 'ai_menu', 'logout', 'exit'],
+    'no_note_selected': ['profile_menu', 'ai_menu', 'note_menu', 'logout', 'exit'],
+    'no_cards_generated': ['profile_menu', 'ai_menu', 'note_menu', 'generate_cards', 'logout', 'exit'],
+    'cards_generated': ['profile_menu', 'ai_menu', 'note_menu', 'generate_cards', 'work_with_cards', 'logout', 'exit']
 }
