@@ -1,8 +1,8 @@
-from typing import Dict, Optional
+from typing import Dict
 
 from custom_exceptions import InvalidPassword, InvalidUsername, UserAlreadyExists
-from profiles.security import EncryptionStrategy
 from profiles.repository import StorageInterface
+from profiles.security import EncryptionStrategy
 from profiles.user_profile import User
 
 
@@ -47,7 +47,7 @@ class UserManager:
 
 
 class AuthenticationManager:
-    def __init__(self,  user_manager: UserManager) -> None:
+    def __init__(self, user_manager: UserManager) -> None:
         self.user_manager = user_manager
 
     def login_user(self, username: str, password: str) -> None:
