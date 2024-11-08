@@ -1,3 +1,22 @@
+from enum import Enum
+
+
+class MenuState(str, Enum):
+    LOG_MENU = 'log_menu'
+    MAIN_MENU = 'main_menu'
+    PROFILE_MENU = 'profile_menu'
+    AI_MENU = 'ai_menu'
+    SOURCE_MENU = 'source_menu'
+
+
+class StageState(str, Enum):
+    NO_PROFILE_SELECTED = 'no_profile_selected'
+    NO_AI = 'no_ai'
+    NO_NOTE_SELECTED = 'no_note_selected'
+    NO_CARDS_GENERATED = 'no_cards_generated'
+    CARDS_GENERATED = 'cards_generated'
+
+
 log_menu = {
     'login': '1. Login',
     'new_user': '2. Add user',
@@ -26,7 +45,6 @@ profile_menu = {
 
 ai_menu = {
     'open_ai': '1. Setup OpenAI',
-    'notion': '2. Setup Notion (coming soon)',
     'main_menu': '8. Back to main menu',
     'logout': '9. Logout',
     'exit': '0. Quit program'
@@ -43,7 +61,7 @@ source_menu = {
 menu_list = {
     'log_menu': log_menu,
     'main_menu': main_menu,
-    'profiles_menu': profile_menu,
+    'profile_menu': profile_menu,
     'ai_menu': ai_menu,
     'source_menu': source_menu
 }

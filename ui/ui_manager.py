@@ -1,13 +1,14 @@
 from dataclasses import dataclass
-from typing import Optional, List
-from ui.menu_items import menu_list, stages
-from profiles.user_profile import User, Profile
+from typing import List, Optional
+
+from profiles.user_profile import Profile, User
+from ui.menu_items import menu_list, MenuState, stages, StageState
 
 
 @dataclass
 class ContextManager:
-    current_menu: str = 'log_menu'
-    current_stage: str = 'initiation'
+    current_menu: MenuState = MenuState.LOG_MENU
+    current_stage: StageState = StageState.NO_PROFILE_SELECTED
     current_user: Optional[User] = None
     current_profile: Optional[Profile] = None
 
@@ -64,4 +65,3 @@ class MenuManager:
             return [menu_items_dict[item_id] for item_id in stages[current_stage]]
         except KeyError:
             raise ValueError(f'Stage "{current_stage}" not found.')
-
