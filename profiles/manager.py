@@ -3,24 +3,24 @@ from typing import Dict
 from custom_exceptions import InvalidPassword, InvalidUsername, UserAlreadyExists
 from profiles.repository import StorageInterface
 from profiles.security import EncryptionStrategy
-from profiles.user_profile import User
+from profiles.user_profile import User, Profile
 
 
 class UserManager:
-    def __init__(self, encryption_strategy: EncryptionStrategy, storage: StorageInterface) -> None:
+    def __init__(self, encryption_strategy: EncryptionStrategy, storage_interface: StorageInterface) -> None:
         self.users: Dict[str, User] = {}
         self.encryption_strategy = encryption_strategy
-        self.storage = storage
+        self.storage_interface = storage_interface
         self.load_users()
 
     def load_users(self) -> None:
-        users_data_dict = self.storage.load_data()
+        users_data_dict = self.storage_interface.load_data()
         for username, users_data_dict in users_data_dict.items():
             self.users[username] = User.from_dict(users_data_dict)
 
     def save_users(self) -> None:
         users_data_dict = {username: user.as_dict() for username, user in self.users.items()}
-        self.storage.save_data(users_data_dict)
+        self.storage_interface.save_data(users_data_dict)
 
     def add_user(self, username: str, password: str) -> None:
         if self.user_exists(username):
@@ -28,6 +28,7 @@ class UserManager:
 
         encrypted_password = self.encryption_strategy.encrypt(password)
         new_user = User(username, encrypted_password)
+        new_user.add_profile(Profile('main'))
         self.users[username] = new_user
         self.save_users()
 

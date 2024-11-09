@@ -44,7 +44,7 @@ profile_menu = {
 }
 
 ai_menu = {
-    'open_ai': '1. Setup OpenAI',
+    'setup_open_ai': '1. Setup OpenAI',
     'main_menu': '8. Back to main menu',
     'logout': '9. Logout',
     'exit': '0. Quit program'

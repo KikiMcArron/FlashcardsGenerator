@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Dict, Optional
 
 from profiles.security import SensitiveDataManager
 
@@ -30,14 +30,14 @@ class OpenAICredentials(Credentials):
     def as_dict(self):
         return {
             'service_name': self.service_name,
-            'gpt_model': self.gpt_model
+            'gpt_model': self.gpt_model,
         }
 
     @classmethod
     def from_dict(cls, data: Dict[str, str]) -> Credentials:
         return cls(
-            service_name='OpenAI',
-            gpt_model=data['gpt_model']
+            service_name=data['service_name'],
+            gpt_model=data['gpt_model'],
         )
 
     def set_api_key(self, api_key: str) -> None:
@@ -59,3 +59,24 @@ class OpenAICredentials(Credentials):
             self.SENSITIVE_DATA_NAME,
             self.SENSITIVE_VARIABLE_NAME
         )
+
+
+class CredentialsFactory:
+    registered_classes: Dict = {}
+
+    @classmethod
+    def register_credentials(cls, service_name: str, credentials_cls) -> None:
+        cls.registered_classes[service_name] = credentials_cls
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, str]) -> Optional[Credentials]:
+        service_name = data.get('service_name')
+        if not service_name:
+            return None
+        credentials_cls = cls.registered_classes.get(service_name)
+        if credentials_cls is None:
+            return None
+        return credentials_cls.from_dict(data)
+
+
+CredentialsFactory.register_credentials('OpenAI', OpenAICredentials)

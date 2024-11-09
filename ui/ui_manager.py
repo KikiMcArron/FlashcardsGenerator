@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from profiles.user_profile import Profile, User
+from profiles.credentials import Credentials
 from ui.menu_items import menu_list, MenuState, stages, StageState
 
 
@@ -11,6 +12,7 @@ class ContextManager:
     current_stage: StageState = StageState.NO_PROFILE_SELECTED
     current_user: Optional[User] = None
     current_profile: Optional[Profile] = None
+    current_ai: Optional[Credentials] = None
 
 
 class MenuManager:

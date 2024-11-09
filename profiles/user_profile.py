@@ -1,28 +1,35 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 from custom_exceptions import DuplicateProfileError, DuplicateServiceError, NoCredentialsError, NoProfileError
-from profiles.credentials import Credentials
+from profiles.credentials import CredentialsFactory, Credentials
 
 
 @dataclass
 class Profile:
-    profile_name: str = 'main'
+    profile_name: str
     credentials: List[Credentials] = field(default_factory=list)
+    default_ai: Optional[str] = None
 
     def as_dict(self) -> dict:
         return {
             'profile_name': self.profile_name,
-            'credentials': [credentials.as_dict() for credentials in self.credentials]
+            'credentials': [credentials.as_dict() for credentials in self.credentials],
+            'default_ai': self.default_ai
         }
 
     @classmethod
     def from_dict(cls, data: dict):
         profile = cls(
             profile_name=data['profile_name'],
+            default_ai=data['default_ai']
         )
         for cred_data in data.get('credentials', []):
-            profile.add_credentials(Credentials.from_dict(cred_data))
+            credentials = CredentialsFactory.from_dict(cred_data)
+            if credentials:
+                profile.add_credentials(credentials)
+            else:
+                raise NoCredentialsError(f"Invalid credentials data encountered {cred_data}")
         return profile
 
     def add_credentials(self, credentials: Credentials) -> None:
@@ -36,6 +43,15 @@ class Profile:
             self.credentials.remove(credentials)
         except ValueError:
             raise NoCredentialsError(f'Credentials not found in profile {self.profile_name}.')
+
+    def get_credentials(self, service_name):
+        try:
+            return next(c for c in self.credentials if c.service_name == service_name)
+        except StopIteration:
+            raise NoCredentialsError(f'Credentials "{service_name}" does not exists for profile {self.profile_name}.')
+
+    def set_as_default_ai(self, service_name) -> None:
+        self.default_ai = service_name
 
 
 class User:
