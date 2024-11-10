@@ -13,6 +13,7 @@ class ContextManager:
     current_user: Optional[User] = None
     current_profile: Optional[Profile] = None
     current_ai: Optional[Credentials] = None
+    current_note: Optional[str] = None
 
 
 class MenuManager:

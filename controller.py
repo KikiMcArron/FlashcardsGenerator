@@ -3,12 +3,14 @@ import sys
 import stdiomask  # type: ignore
 
 from custom_exceptions import DuplicateProfileError, InvalidPassword, ValidationError
+from notes.reader import TxtReader
+from profiles.credentials import OpenAICredentials
 from profiles.manager import AuthenticationManager, UserManager
 from profiles.repository import JSONStorage
 from profiles.security import Bcrypt, PasswordValidator
-from profiles.user_profile import Profile, User
-from profiles.credentials import OpenAICredentials, Credentials
-from settings import STORAGE_DIR, USERS_FILE, OPENAI_MODELS
+from profiles.user_profile import Profile
+from settings import OPENAI_MODELS, STORAGE_DIR, USERS_FILE, FILE_TYPES
+from ui.gui import FileSelector
 from ui.menu_items import MenuState, StageState
 from ui.ui_manager import ContextManager, MenuManager
 from utils import clear_screen
@@ -22,6 +24,7 @@ class Application:
         self.storage = JSONStorage(f'{STORAGE_DIR}/{USERS_FILE}')
         self.user_manager = UserManager(self.encryption_strategy, self.storage)
         self.auth_manager = AuthenticationManager(self.user_manager)
+        self.file_selector = FileSelector(FILE_TYPES)
         # TODO: Do I need this action_dispatcher. Maybe I can execute menu actions via class method
         self.action_dispatcher = {
             'login': LogIn(self.context_manager, self.auth_manager),
@@ -36,7 +39,7 @@ class Application:
             'setup_open_ai': SetupOpenAI(self.context_manager, self.user_manager),
             # 'edit_profile': EditProfile(self, self.profile_manager),
             # 'select_source_note': SelectSource(self),
-            # 'source_file': SourceFile(self),
+            'source_file': NoteFromFile(self.context_manager, self.file_selector),
             # 'source_notion': '',
             # 'generate_cards': GenerateCards(self),
             'main_menu': MainMenu(self.context_manager),
@@ -46,6 +49,12 @@ class Application:
     def main(self):
         clear_screen()
         while True:
+            print('################ DEBUG #######################')
+            print(f'Current menu: {self.context_manager.current_menu},\n'
+                  f'Current stage: {self.context_manager.current_stage}\n'
+                  f'Current user: {self.context_manager.current_user}\n'
+                  f'Current AI: {self.context_manager.current_ai}')
+            print('####################################################################\n')
             print('Select your action:')
             self.menu_manager.display_menu()
             user_input = input('>>>>> ')
@@ -220,7 +229,8 @@ class SelectProfile(Action):
         self.log('Profile selection...')
         profile_name = input('Please provide profile name: ')
         if not self.context_manager.current_user.profile_exists(profile_name):
-            self.error(f'Profile "{profile_name}" does\'t exists, try again with a different profile name or create new.')
+            self.error(
+                f'Profile "{profile_name}" does\'t exists, try again with a different profile name or create new.')
             return
         self.context_manager.current_profile = self.context_manager.current_user.get_profile(profile_name)
         self.context_manager.current_stage = StageState.NO_AI
@@ -285,6 +295,22 @@ class SourceMenu(Action):
 
     def execute(self):
         self.context_manager.current_menu = MenuState.SOURCE_MENU
+
+
+class NoteFromFile(Action):
+    def __init__(self, context_manager: ContextManager, file_selector: FileSelector):
+        self.context_manager = context_manager
+        self.file_selector = file_selector
+
+    def execute(self):
+        self.log('Load note from TXT file...')
+        file_path = self.file_selector.select_file()
+        if file_path:
+            txt_reader = TxtReader()
+            content = txt_reader.read_source(file_path)
+            self.context_manager.current_note = content
+            self.context_manager.current_stage = StageState.NO_CARDS_GENERATED
+            self.info('File loaded...')
 
 
 class MainMenu(Action):

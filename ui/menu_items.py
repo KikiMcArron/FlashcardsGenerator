@@ -27,7 +27,7 @@ log_menu = {
 main_menu = {
     'profile_menu': '1. Manage profiles',
     'ai_menu': '2. Configure AI',
-    'note_menu': '3. Select source note',
+    'source_menu': '3. Select source note',
     'generate_cards': '4. Generate flashcards',
     'work_with_cards': '5. Work with flashcards',
     'logout': '9. Logout',
@@ -69,7 +69,7 @@ menu_list = {
 stages = {
     'no_profile_selected': ['profile_menu', 'logout', 'exit'],
     'no_ai': ['profile_menu', 'ai_menu', 'logout', 'exit'],
-    'no_note_selected': ['profile_menu', 'ai_menu', 'note_menu', 'logout', 'exit'],
-    'no_cards_generated': ['profile_menu', 'ai_menu', 'note_menu', 'generate_cards', 'logout', 'exit'],
-    'cards_generated': ['profile_menu', 'ai_menu', 'note_menu', 'generate_cards', 'work_with_cards', 'logout', 'exit']
+    'no_note_selected': ['profile_menu', 'ai_menu', 'source_menu', 'logout', 'exit'],
+    'no_cards_generated': ['profile_menu', 'ai_menu', 'source_menu', 'generate_cards', 'logout', 'exit'],
+    'cards_generated': ['profile_menu', 'ai_menu', 'source_menu', 'generate_cards', 'work_with_cards', 'logout', 'exit']
 }
