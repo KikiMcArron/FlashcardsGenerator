@@ -12,7 +12,7 @@ from profiles.manager import AuthenticationManager, UserManager
 from profiles.repository import JSONStorage
 from profiles.security import Bcrypt, PasswordValidator
 from profiles.user_profile import Profile
-from settings import FILE_TYPES, OPENAI_MODELS, STORAGE_DIR, USERS_FILE
+from settings import FILE_TYPES, OPENAI_MODELS, STORAGE_DIR, USERS_FILE, PROMPT
 from ui.gui import FileSelector
 from ui.menu_items import MenuState, StageState
 from ui.ui_manager import ContextManager, MenuManager
@@ -41,10 +41,9 @@ class Application:
             'source_menu': SourceMenu(self.context_manager),
             'setup_open_ai': SetupOpenAI(self.context_manager, self.user_manager),
             # 'edit_profile': EditProfile(self, self.profile_manager),
-            # 'select_source_note': SelectSource(self),
             'source_file': NoteFromFile(self.context_manager, self.file_selector),
-            # 'source_notion': '',
             'generate_cards': GenerateCards(self.context_manager),
+            # 'work_with_cards': WorkWithCards()
             'main_menu': MainMenu(self.context_manager),
             'exit': Exit(self.auth_manager)
         }
@@ -264,7 +263,7 @@ class SetupOpenAI(Action):
         self.context_manager.current_profile.set_as_default_ai(openai_credentials.service_name)
         self.user_manager.save_users()
         self.context_manager.current_stage = StageState.NO_NOTE_SELECTED
-        self.info('OpenAI configured successfully.')
+        self.info('OpenAI configured successfully!')
 
     def get_openai_api_key_from_user(self) -> str:
         """ Get OpenAI API key from the user. """
@@ -313,7 +312,8 @@ class NoteFromFile(Action):
             content = txt_reader.read_source(file_path)
             self.context_manager.current_note = content
             self.context_manager.current_stage = StageState.NO_CARDS_GENERATED
-            self.info('File loaded...')
+            self.context_manager.current_menu = MenuState.MAIN_MENU
+            self.info('Note loaded successfully!')
 
 
 class GenerateCards(Action):
@@ -331,20 +331,14 @@ class GenerateCards(Action):
             return
 
         try:
-            # Retrieve the API key securely
             api_key = self.context_manager.current_ai.get_api_key()
-            model = self.context_manager.current_ai.gpt_model  # Assuming the model is stored in the credentials
+            model = self.context_manager.current_ai.gpt_model
             client = OpenAIClient(api_key=api_key)
             cards_generator = CardsGenerator(client)
 
             # Generate flashcards
             content = self.context_manager.current_note
-            prompt = (
-                f'Generate flashcards for the given text, based on content and information from text. '
-                f'Please format the flashcards as a simple JSON array with keys: "front", "back", '
-                f'without Markdown or code block formatting. The text is:\n\n{content}'
-            )
-            cards_content = cards_generator.generate_flashcards(model, prompt, content)
+            cards_content = cards_generator.generate_flashcards(model, PROMPT, content)
             if not cards_content:
                 self.error('Failed to generate flashcards from the content.')
                 return
@@ -353,6 +347,7 @@ class GenerateCards(Action):
             # Assuming cards_content is parsed into front-back card pairs here
             cards = [Card.from_dict(c) for c in ast.literal_eval(cards_content)]
             self.context_manager.temp_deck = self._save_cards_to_deck(cards)
+            self.context_manager.current_stage = StageState.CARDS_GENERATED
             self.info('Flashcards generated successfully!')
 
         except Exception as e:
