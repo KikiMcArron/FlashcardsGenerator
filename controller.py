@@ -1,15 +1,18 @@
 import sys
+import ast
 
 import stdiomask  # type: ignore
 
 from custom_exceptions import DuplicateProfileError, InvalidPassword, ValidationError
+from flashcards.deck import Card, Deck
+from flashcards.generator import CardsGenerator, OpenAIClient
 from notes.reader import TxtReader
 from profiles.credentials import OpenAICredentials
 from profiles.manager import AuthenticationManager, UserManager
 from profiles.repository import JSONStorage
 from profiles.security import Bcrypt, PasswordValidator
 from profiles.user_profile import Profile
-from settings import OPENAI_MODELS, STORAGE_DIR, USERS_FILE, FILE_TYPES
+from settings import FILE_TYPES, OPENAI_MODELS, STORAGE_DIR, USERS_FILE
 from ui.gui import FileSelector
 from ui.menu_items import MenuState, StageState
 from ui.ui_manager import ContextManager, MenuManager
@@ -41,7 +44,7 @@ class Application:
             # 'select_source_note': SelectSource(self),
             'source_file': NoteFromFile(self.context_manager, self.file_selector),
             # 'source_notion': '',
-            # 'generate_cards': GenerateCards(self),
+            'generate_cards': GenerateCards(self.context_manager),
             'main_menu': MainMenu(self.context_manager),
             'exit': Exit(self.auth_manager)
         }
@@ -311,6 +314,55 @@ class NoteFromFile(Action):
             self.context_manager.current_note = content
             self.context_manager.current_stage = StageState.NO_CARDS_GENERATED
             self.info('File loaded...')
+
+
+class GenerateCards(Action):
+    def __init__(self, context_manager: ContextManager):
+        self.context_manager = context_manager
+
+    def execute(self):
+        self.log('Generating cards...')
+        if not self.context_manager.current_note:
+            self.error('No note selected to generate cards from.')
+            return
+
+        if not self.context_manager.current_ai or not isinstance(self.context_manager.current_ai, OpenAICredentials):
+            self.error('No valid AI credentials found for generating cards.')
+            return
+
+        try:
+            # Retrieve the API key securely
+            api_key = self.context_manager.current_ai.get_api_key()
+            model = self.context_manager.current_ai.gpt_model  # Assuming the model is stored in the credentials
+            client = OpenAIClient(api_key=api_key)
+            cards_generator = CardsGenerator(client)
+
+            # Generate flashcards
+            content = self.context_manager.current_note
+            prompt = (
+                f'Generate flashcards for the given text, based on content and information from text. '
+                f'Please format the flashcards as a simple JSON array with keys: "front", "back", '
+                f'without Markdown or code block formatting. The text is:\n\n{content}'
+            )
+            cards_content = cards_generator.generate_flashcards(model, prompt, content)
+            if not cards_content:
+                self.error('Failed to generate flashcards from the content.')
+                return
+
+            # You may need to implement parsing logic for cards_content into Card objects
+            # Assuming cards_content is parsed into front-back card pairs here
+            cards = [Card.from_dict(c) for c in ast.literal_eval(cards_content)]
+            self.context_manager.temp_deck = self._save_cards_to_deck(cards)
+            self.info('Flashcards generated successfully!')
+
+        except Exception as e:
+            self.error(f'Generating flashcards failed: \n{e}')
+
+    @staticmethod
+    def _save_cards_to_deck(cards):
+        deck = Deck()
+        deck.load_cards(cards)
+        return deck
 
 
 class MainMenu(Action):

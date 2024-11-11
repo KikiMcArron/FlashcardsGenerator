@@ -19,7 +19,7 @@ class Profile:
         }
 
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data: dict) -> 'Profile':
         profile = cls(
             profile_name=data['profile_name'],
             default_ai=data['default_ai']
@@ -69,7 +69,7 @@ class User:
         }
 
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data: dict) -> 'User':
         user = cls(
             user_name=data['user_name'],
             encrypted_password=data['encrypted_password']

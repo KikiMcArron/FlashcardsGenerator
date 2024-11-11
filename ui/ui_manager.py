@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from profiles.user_profile import Profile, User
 from profiles.credentials import Credentials
+from flashcards.deck import Deck
 from ui.menu_items import menu_list, MenuState, stages, StageState
 
 
@@ -14,6 +15,7 @@ class ContextManager:
     current_profile: Optional[Profile] = None
     current_ai: Optional[Credentials] = None
     current_note: Optional[str] = None
+    temp_deck: Optional[Deck] = None
 
 
 class MenuManager:

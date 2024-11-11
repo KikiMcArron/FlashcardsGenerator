@@ -15,9 +15,16 @@ class Card:
     def __str__(self) -> str:
         return f"Card ID: {self.card_id}\nFront: {self.front}\nBack: {self.back}"
 
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Card':
+        card = cls(
+            front=data['front'],
+            back=data['back']
+        )
+        return card
+
 
 class Deck:
-
     def __init__(self) -> None:
         self.cards: List[Card] = []
 
