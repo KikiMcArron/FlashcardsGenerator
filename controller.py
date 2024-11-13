@@ -6,12 +6,14 @@ import stdiomask  # type: ignore
 from custom_exceptions import DuplicateProfileError, InvalidPassword, ValidationError
 from flashcards.deck import Card, Deck
 from flashcards.generator import CardsGenerator, OpenAIClient
+from flashcards.editor import DataclassEditor
 from notes.reader import TxtReader
 from profiles.credentials import OpenAICredentials
 from profiles.manager import AuthenticationManager, UserManager
 from profiles.repository import JSONStorage
 from profiles.security import Bcrypt, PasswordValidator
 from profiles.user_profile import Profile
+
 from settings import FILE_TYPES, OPENAI_MODELS, STORAGE_DIR, USERS_FILE, PROMPT
 from ui.gui import FileSelector
 from ui.menu_items import MenuState, StageState
@@ -43,7 +45,7 @@ class Application:
             # 'edit_profile': EditProfile(self, self.profile_manager),
             'source_file': NoteFromFile(self.context_manager, self.file_selector),
             'generate_cards': GenerateCards(self.context_manager),
-            # 'work_with_cards': WorkWithCards()
+            'work_with_cards': WorkWithCards(self.context_manager),
             'main_menu': MainMenu(self.context_manager),
             'exit': Exit(self.auth_manager)
         }
@@ -360,6 +362,47 @@ class GenerateCards(Action):
         return deck
 
 
+class WorkWithCards(Action):
+    def __init__(self, context_manager: ContextManager):
+        self.context_manager = context_manager
+        self.cards_editor: DataclassEditor = DataclassEditor(display_fields=['front', 'back'])
+
+    def execute(self):
+        self.log('Work with generated cards...')
+        if not self.context_manager.temp_deck:
+            self.error('No cards to work with...')
+        self.context_manager.final_deck = Deck()
+        self.process_input()
+        self.info('There are no more cards to work through. ')
+
+    def process_input(self):
+        for card in self.context_manager.temp_deck.cards[:]:
+            while True:
+                print('What you want to do with this card?')
+                print('---')
+                print(card)
+                print('---')
+                print('1. Approve card.')
+                print('2. Reject card.')
+                print('3. Edit card.')
+                user_input = input('>>>>> ')
+                if user_input == '1':
+                    self.context_manager.final_deck.load_cards([card])
+                    break
+                elif user_input == '2':
+                    print('Card rejected.')
+                    break
+                elif user_input == '3':
+                    edited_card = self.cards_editor.edit_dataclass(card)
+                    self.context_manager.final_deck.load_cards([Card(front=edited_card.front, back=edited_card.back)])
+                    break
+                else:
+                    print(f'Option {user_input} is not available.')
+                    input('Press Enter to continue...')
+                    continue
+            self.context_manager.temp_deck.remove_card(card)
+
+
 class MainMenu(Action):
     def __init__(self, context_manager: ContextManager):
         self.context_manager = context_manager
@@ -383,7 +426,3 @@ class Exit(Action):
             else:
                 self.error('Invalid answer, select "Y" or "N".')
                 clear_screen()
-
-
-app = Application()
-app.main()

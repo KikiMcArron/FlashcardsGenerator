@@ -16,6 +16,7 @@ class ContextManager:
     current_ai: Optional[Credentials] = None
     current_note: Optional[str] = None
     temp_deck: Optional[Deck] = None
+    final_deck: Optional[Deck] = None
 
 
 class MenuManager:
