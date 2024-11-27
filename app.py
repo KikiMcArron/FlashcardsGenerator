@@ -1,4 +1,4 @@
-from controller import Application
+from controller.application import Application
 
 
 if __name__ == "__main__":
