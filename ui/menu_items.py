@@ -58,7 +58,7 @@ source_menu = {
     'exit': '0. Quit program'
 }
 
-menu_list = {
+menus = {
     'log_menu': log_menu,
     'main_menu': main_menu,
     'profile_menu': profile_menu,

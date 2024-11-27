@@ -1,30 +1,30 @@
-import sys
 import ast
+import sys
 
 import stdiomask  # type: ignore
 
 from custom_exceptions import DuplicateProfileError, InvalidPassword, ValidationError
 from flashcards.deck import Card, Deck
-from flashcards.generator import CardsGenerator, OpenAIClient
 from flashcards.editor import DataclassEditor
+from flashcards.generator import CardsGenerator, OpenAIClient
 from notes.reader import TxtReader
 from profiles.credentials import OpenAICredentials
 from profiles.manager import AuthenticationManager, UserManager
 from profiles.repository import JSONStorage
 from profiles.security import Bcrypt, PasswordValidator
 from profiles.user_profile import Profile
-
-from settings import FILE_TYPES, OPENAI_MODELS, STORAGE_DIR, USERS_FILE, PROMPT
+from settings import FILE_TYPES, OPENAI_MODELS, PROMPT, STORAGE_DIR, USERS_FILE
 from ui.gui import FileSelector
-from ui.menu_items import MenuState, StageState
-from ui.ui_manager import ContextManager, MenuManager
+from ui.menu_items import menus, MenuState, stages, StageState
+from ui.ui_manager import ContextManager, MenuManager, UserInputHandler
 from utils import clear_screen
 
 
 class Application:
     def __init__(self):
         self.context_manager = ContextManager()
-        self.menu_manager = MenuManager(self.context_manager)
+        self.menu_manager = MenuManager(menus, stages, self.context_manager)
+        self.input_handler = UserInputHandler(menus)
         self.encryption_strategy = Bcrypt()
         self.storage = JSONStorage(f'{STORAGE_DIR}/{USERS_FILE}')
         self.user_manager = UserManager(self.encryption_strategy, self.storage)
@@ -53,16 +53,14 @@ class Application:
     def main(self):
         clear_screen()
         while True:
-            print('################ DEBUG #######################')
-            print(f'Current menu: {self.context_manager.current_menu},\n'
-                  f'Current stage: {self.context_manager.current_stage}\n'
-                  f'Current user: {self.context_manager.current_user}\n'
-                  f'Current AI: {self.context_manager.current_ai}')
-            print('####################################################################\n')
             print('Select your action:')
             self.menu_manager.display_menu()
             user_input = input('>>>>> ')
-            action_key = self.menu_manager.process_input(user_input)
+            action_key = self.input_handler.process_input(
+                user_input,
+                self.context_manager.current_menu,
+                self.menu_manager.menu_items
+            )
             clear_screen()
             if not action_key:
                 continue
