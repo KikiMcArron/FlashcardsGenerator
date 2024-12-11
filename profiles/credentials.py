@@ -5,7 +5,8 @@ from profiles.security import SensitiveDataManager
 
 
 class Credentials(ABC):
-    def __init__(self, service_name: str):
+    def __init__(self, credentials_type: str, service_name: str):
+        self.credentials_type = credentials_type
         self.service_name = service_name
 
     @abstractmethod
@@ -22,13 +23,14 @@ class OpenAICredentials(Credentials):
     SENSITIVE_DATA_NAME = 'api_key'
     SENSITIVE_VARIABLE_NAME = 'OPENAI_API_KEY'
 
-    def __init__(self, gpt_model: str, service_name='OpenAI'):
-        super().__init__(service_name=service_name)
+    def __init__(self, gpt_model: str, credentials_type='AI', service_name='OpenAI'):
+        super().__init__(credentials_type=credentials_type, service_name=service_name)
         self.gpt_model = gpt_model
         self.sensitive_data_manager = SensitiveDataManager()
 
     def as_dict(self):
         return {
+            'credentials_type': self.credentials_type,
             'service_name': self.service_name,
             'gpt_model': self.gpt_model,
         }
@@ -36,6 +38,7 @@ class OpenAICredentials(Credentials):
     @classmethod
     def from_dict(cls, data: Dict[str, str]) -> Credentials:
         return cls(
+            credentials_type=data['credentials_type'],
             service_name=data['service_name'],
             gpt_model=data['gpt_model'],
         )

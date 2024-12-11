@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 from custom_exceptions import DuplicateProfileError, DuplicateServiceError, NoCredentialsError, NoProfileError
-from profiles.credentials import CredentialsFactory, Credentials
+from profiles.credentials import Credentials, CredentialsFactory
 
 
 @dataclass
@@ -36,11 +36,17 @@ class Profile:
         if any(c.service_name == credentials.service_name for c in self.credentials):
             raise DuplicateServiceError(f'Credentials for service {credentials.service_name} already exist in profile'
                                         f' {self.profile_name}.')
+        if credentials.credentials_type == 'AI' and not any(c.credentials_type == 'AI' for c in self.credentials):
+            self.set_as_default_ai(credentials.service_name)
+            print(f'Default AI for this profile updated to {self.default_ai}')
         self.credentials.append(credentials)
 
     def remove_credentials(self, credentials: Credentials) -> None:
         try:
             self.credentials.remove(credentials)
+            if credentials.service_name == self.default_ai:
+                self.default_ai = next((c.service_name for c in self.credentials if c.credentials_type == 'AI'), None)
+                print(f'Default AI for this profile updated to {self.default_ai}')
         except ValueError:
             raise NoCredentialsError(f'Credentials not found in profile {self.profile_name}.')
 
@@ -51,6 +57,9 @@ class Profile:
             raise NoCredentialsError(f'Credentials "{service_name}" does not exists for profile {self.profile_name}.')
 
     def set_as_default_ai(self, service_name) -> None:
+        ai_credentials = (c for c in self.credentials if c.credentials_type == 'AI')
+        if service_name not in (c.service_name for c in ai_credentials):
+            raise ValueError(f'Service {service_name} is not a valid AI credential.')
         self.default_ai = service_name
 
 
