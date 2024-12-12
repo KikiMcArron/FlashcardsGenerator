@@ -37,7 +37,7 @@ class Profile:
             raise DuplicateServiceError(f'Credentials for service {credentials.service_name} already exist in profile'
                                         f' {self.profile_name}.')
         if credentials.credentials_type == 'AI' and not any(c.credentials_type == 'AI' for c in self.credentials):
-            self.set_as_default_ai(credentials.service_name)
+            self.set_as_default_ai(credentials)
             print(f'Default AI for this profile updated to {self.default_ai}')
         self.credentials.append(credentials)
 
@@ -56,11 +56,10 @@ class Profile:
         except StopIteration:
             raise NoCredentialsError(f'Credentials "{service_name}" does not exists for profile {self.profile_name}.')
 
-    def set_as_default_ai(self, service_name) -> None:
-        ai_credentials = (c for c in self.credentials if c.credentials_type == 'AI')
-        if service_name not in (c.service_name for c in ai_credentials):
-            raise ValueError(f'Service {service_name} is not a valid AI credential.')
-        self.default_ai = service_name
+    def set_as_default_ai(self, credentials: Credentials) -> None:
+        if credentials.credentials_type != 'AI':
+            raise ValueError(f'Service {credentials.service_name} is not a valid AI credential.')
+        self.default_ai = credentials.service_name
 
 
 class User:
