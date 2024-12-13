@@ -45,7 +45,7 @@ class CardsGenerator:
                 {"role": "user", "content": f"{prompt}\n\n{content}"},
             ]
             response = self.ai_client.generate_completion(model, messages)
-            queries_logger.debug(f'Model: {model}\nContent: {content[:100] + '...'}\nResponse: {response}\n\n')
+            queries_logger.debug(f'AI model: {model}\nContent: {content[:100] + '...'}\nResponse: {response}\n\n')
             return response
         except Exception as e:
             logger.error(f'Generating flashcards failed: \n{e}')
