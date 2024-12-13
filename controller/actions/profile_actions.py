@@ -1,9 +1,9 @@
 from controller.actions.base_action import Action
-from ui.ui_manager import ContextManager
+from custom_exceptions import DuplicateProfileError
 from profiles.manager import UserManager
 from profiles.user_profile import Profile
-from custom_exceptions import DuplicateProfileError
-from ui.menu_items import StageState
+from ui.menu_items import MenuState, StageState
+from ui.ui_manager import ContextManager
 
 
 class NewProfile(Action):
@@ -37,12 +37,22 @@ class SelectProfile(Action):
     def execute(self):
         self.log('Profile selection...')
         profile_name = input('Please provide profile name: ')
+
         if not self.context_manager.current_user.profile_exists(profile_name):
             self.error(
                 f'Profile "{profile_name}" does\'t exists, try again with a different profile name or create new.')
             return
+
         self.context_manager.current_profile = self.context_manager.current_user.get_profile(profile_name)
-        if not self.context_manager.current_ai:
-            self.context_manager.current_stage = StageState.NO_AI
+        profile = self.context_manager.current_profile
+        self.context_manager.current_ai = profile.get_credentials(profile.default_ai) if profile.default_ai else None
+
+        self.context_manager.current_stage = (
+            StageState.NO_AI if not self.context_manager.current_ai else
+            StageState.NO_NOTE_SELECTED if not self.context_manager.current_note else
+            StageState.NO_CARDS_GENERATED
+        )
+
+        self.context_manager.current_menu = MenuState.MAIN_MENU
         self.info(f'Profile "{profile_name}" selected.')
         return
