@@ -38,7 +38,6 @@ class Profile:
                                         f' {self.profile_name}.')
         if credentials.credentials_type == 'AI' and not any(c.credentials_type == 'AI' for c in self.credentials):
             self.set_as_default_ai(credentials)
-            print(f'Default AI for this profile updated to {self.default_ai}')
         self.credentials.append(credentials)
 
     def remove_credentials(self, credentials: Credentials) -> None:
