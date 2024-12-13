@@ -30,6 +30,17 @@ class Application:
     def main(self):
         clear_screen()
         while True:
+            print('########## DEBUG INFO ##########')
+            print(f'Current Menu: {self.context_manager.current_menu}')
+            print(f'Current Stage: {self.context_manager.current_stage}\n')
+            print(f'Current User: '
+                  f'{getattr(self.context_manager.current_user, "user_name", None)}')
+            print(f'Current Profile: '
+                  f'{getattr(self.context_manager.current_profile, "profile_name", None)}\n')
+            print(f'Current AI: '
+                  f'{self.context_manager.current_ai or None}')
+            print(f'Current Note: {self.context_manager.current_note}')
+            print('################################')
             print('Select your action:')
             self.menu_manager.display_menu()
             user_input = input('>>>>> ')
