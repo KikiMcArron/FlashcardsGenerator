@@ -4,7 +4,7 @@ from controller.actions.base_action import Action
 from flashcards.deck import Card, Deck
 from flashcards.editor import DataclassEditor
 from flashcards.generator import CardsGenerator, OpenAIClient
-from profiles.credentials import OpenAICredentials
+from profiles.credentials import AICredentials
 from settings import PROMPT
 from ui.menu_items import StageState
 from ui.ui_manager import ContextManager
@@ -20,25 +20,22 @@ class GenerateCards(Action):
             self.error('No note selected to generate cards from.')
             return
 
-        if not self.context_manager.current_ai or not isinstance(self.context_manager.current_ai, OpenAICredentials):
+        if not self.context_manager.current_ai or not isinstance(self.context_manager.current_ai, AICredentials):
             self.error('No valid AI credentials found for generating cards.')
             return
 
         try:
             api_key = self.context_manager.current_ai.get_api_key()
             model = self.context_manager.current_ai.gpt_model
-            client = OpenAIClient(api_key=api_key)
+            client = OpenAIClient(api_key)
             cards_generator = CardsGenerator(client)
 
-            # Generate flashcards
             content = self.context_manager.current_note
             cards_content = cards_generator.generate_flashcards(model, PROMPT, content)
             if not cards_content:
                 self.error('Failed to generate flashcards from the content.')
                 return
 
-            # You may need to implement parsing logic for cards_content into Card objects
-            # Assuming cards_content is parsed into front-back card pairs here
             cards = [Card.from_dict(c) for c in ast.literal_eval(cards_content)]
             self.context_manager.temp_deck = self._save_cards_to_deck(cards)
             self.context_manager.current_stage = StageState.CARDS_GENERATED

@@ -19,14 +19,37 @@ class Credentials(ABC):
         pass
 
 
-class OpenAICredentials(Credentials):
+class AICredentials(ABC):
+    @property
+    @abstractmethod
+    def gpt_model(self):
+        pass
+
+    @abstractmethod
+    def set_api_key(self, api_key: str) -> None:
+        pass
+
+    @abstractmethod
+    def get_api_key(self) -> str:
+        pass
+
+    @abstractmethod
+    def load_api_key_to_env(self) -> None:
+        pass
+
+
+class OpenAICredentials(Credentials, AICredentials):
     SENSITIVE_DATA_NAME = 'api_key'
     SENSITIVE_VARIABLE_NAME = 'OPENAI_API_KEY'
 
     def __init__(self, gpt_model: str, credentials_type='AI', service_name='OpenAI'):
         super().__init__(credentials_type=credentials_type, service_name=service_name)
-        self.gpt_model = gpt_model
+        self._gpt_model = gpt_model
         self.sensitive_data_manager = SensitiveDataManager()
+
+    @property
+    def gpt_model(self):
+        return self._gpt_model
 
     def as_dict(self):
         return {

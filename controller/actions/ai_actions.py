@@ -23,7 +23,9 @@ class SetupOpenAI(Action):
         openai_credentials.set_api_key(api_key)
         try:
             self.context_manager.current_profile.add_credentials(openai_credentials)
-            self.context_manager.current_profile.set_as_default_ai(openai_credentials.service_name)
+            if not self.context_manager.current_ai:
+                self.context_manager.current_ai = openai_credentials
+                self.log(f'Current AI updated to {openai_credentials.service_name}')
             self.user_manager.save_users()
             self.context_manager.current_stage = StageState.NO_NOTE_SELECTED
             self.info('OpenAI configured successfully!')
