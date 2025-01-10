@@ -1,7 +1,7 @@
 from controller.actions.ai_actions import SetupOpenAI
 from controller.actions.cards_actions import GenerateCards, WorkWithCards
 from controller.actions.logging_actions import LogIn, LogOut
-from controller.actions.menu_actions import AIMenu, Exit, MainMenu, ProfileMenu, SourceMenu
+from controller.actions.menu_actions import AIMenu, Exit, MainMenu, ProfileMenu, SourceMenu, ExportMenu
 from controller.actions.note_actions import NoteFromFile
 from controller.actions.profile_actions import NewProfile, SelectProfile
 from controller.actions.user_actions import NewUser, RemoveUser
@@ -23,6 +23,7 @@ class ActionsDispatcher:
             'source_file': NoteFromFile(context_manager, file_selector),
             'generate_cards': GenerateCards(context_manager),
             'work_with_cards': WorkWithCards(context_manager),
+            'export_cards': ExportMenu(context_manager),
             'main_menu': MainMenu(context_manager),
             'exit': Exit(auth_manager)
         }

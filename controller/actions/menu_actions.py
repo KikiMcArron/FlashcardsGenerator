@@ -30,6 +30,14 @@ class SourceMenu(Action):
         self.context_manager.current_menu = MenuState.SOURCE_MENU
 
 
+class ExportMenu(Action):
+    def __init__(self, context_manager: ContextManager):
+        self.context_manager = context_manager
+
+    def execute(self):
+        self.context_manager.current_menu = MenuState.EXPORT_MENU
+
+
 class MainMenu(Action):
     def __init__(self, context_manager: ContextManager):
         self.context_manager = context_manager

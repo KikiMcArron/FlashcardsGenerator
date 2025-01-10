@@ -7,6 +7,7 @@ class MenuState(str, Enum):
     PROFILE_MENU = 'profile_menu'
     AI_MENU = 'ai_menu'
     SOURCE_MENU = 'source_menu'
+    EXPORT_MENU = 'export_menu'
 
 
 class StageState(str, Enum):
@@ -30,6 +31,7 @@ main_menu = {
     'source_menu': '3. Select source note',
     'generate_cards': '4. Generate flashcards',
     'work_with_cards': '5. Work with flashcards',
+    'export_cards': '6. Export cards',
     'logout': '9. Logout',
     'exit': '0. Quit program'
 }
@@ -58,12 +60,20 @@ source_menu = {
     'exit': '0. Quit program'
 }
 
+export_menu = {
+    'export_to_txt': '1. Export cards to .txt file',
+    'main_menu': '8. Back to main menu',
+    'logout': '9. Logout',
+    'exit': '0. Quit program'
+}
+
 menus = {
     'log_menu': log_menu,
     'main_menu': main_menu,
     'profile_menu': profile_menu,
     'ai_menu': ai_menu,
-    'source_menu': source_menu
+    'source_menu': source_menu,
+    'export_menu': export_menu
 }
 
 stages = {
@@ -71,5 +81,6 @@ stages = {
     'no_ai': ['profile_menu', 'ai_menu', 'logout', 'exit'],
     'no_note_selected': ['profile_menu', 'ai_menu', 'source_menu', 'logout', 'exit'],
     'no_cards_generated': ['profile_menu', 'ai_menu', 'source_menu', 'generate_cards', 'logout', 'exit'],
-    'cards_generated': ['profile_menu', 'ai_menu', 'source_menu', 'generate_cards', 'work_with_cards', 'logout', 'exit']
+    'cards_generated': ['profile_menu', 'ai_menu', 'source_menu', 'generate_cards', 'work_with_cards',
+                        'export_cards' 'logout', 'exit']
 }
