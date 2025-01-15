@@ -57,36 +57,39 @@ class WorkWithCards(Action):
         self.cards_editor: DataclassEditor = DataclassEditor(display_fields=['front', 'back'])
 
     def execute(self):
+        temp_deck = self.context_manager.temp_deck
         self.log('Work with generated cards...')
-        if not self.context_manager.temp_deck:
+        if not temp_deck or not temp_deck.cards:
             self.error('No cards to work with...')
         self.context_manager.final_deck = Deck()
         self.process_input()
-        self.info('There are no more cards to work through. ')
+        if not temp_deck.cards:
+            self.info('There are no more cards to work through. ')
 
     def process_input(self):
         for card in self.context_manager.temp_deck.cards[:]:
             while True:
-                print('What you want to do with this card?')
+                print('What you want to do?')
                 print('---')
                 print(card)
                 print('---')
                 print('1. Approve card.')
                 print('2. Reject card.')
                 print('3. Edit card.')
+                print('8. Back to main menu')
                 user_input = input('>>>>> ')
                 if user_input == '1':
                     self.context_manager.final_deck.load_cards([card])
-                    break
                 elif user_input == '2':
                     print('Card rejected.')
-                    break
                 elif user_input == '3':
                     edited_card = self.cards_editor.edit_dataclass(card)
                     self.context_manager.final_deck.load_cards([Card(front=edited_card.front, back=edited_card.back)])
-                    break
+                elif user_input == '8':
+                    return
                 else:
                     print(f'Option {user_input} is not available.')
                     input('Press Enter to continue...')
                     continue
+                break
             self.context_manager.temp_deck.remove_card(card)
