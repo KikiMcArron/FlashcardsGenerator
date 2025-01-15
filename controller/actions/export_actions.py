@@ -1,5 +1,6 @@
 from controller.actions.base_action import Action
 from ui.ui_manager import ContextManager
+from ui.menu_items import MenuState
 from utils import clear_screen
 from flashcards.deck import Deck
 from settings import STORAGE_DIR
@@ -36,16 +37,16 @@ class Export2Txt(Action):
             elif user_input == 'N':
                 break
             else:
-                self.error('Invalid selection, please select "Y" or "N".')
+                self.error('Invalid selection, please select "Y" or "N"')
                 clear_screen()
 
     def _handle_export_options(self, temp_deck: Deck, final_deck: Deck):
         while True:
             self.info('You didn\'t processed all of generated cards.')
             print('What you want to do?')
-            print('1. Export processed cards.')
-            print('2. Export not processed cards.')
-            print('3. Export all processed and not processed cards.')
+            print('1. Export processed cards')
+            print('2. Export not processed cards')
+            print('3. Export all processed and not processed cards')
             print('8. Back to main menu')
             user_input = input('>>>>> ').strip()
 
@@ -57,6 +58,7 @@ class Export2Txt(Action):
                 self._save_flashcards(final_deck, 'processed_cards')
                 self._save_flashcards(temp_deck, 'unprocessed_cards')
             elif user_input == '8':
+                self.context_manager.current_menu = MenuState.MAIN_MENU
                 return
             else:
                 self.error(f'Option {user_input} is not available.')
