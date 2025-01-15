@@ -31,8 +31,8 @@ class Application:
         clear_screen()
         while True:
             print('########## DEBUG INFO ##########')
-            print(f'Current Menu: {self.context_manager.current_menu}')
-            print(f'Current Stage: {self.context_manager.current_stage}\n')
+            # print(f'Current Menu: {self.context_manager.current_menu}')
+            # print(f'Current Stage: {self.context_manager.current_stage}\n')
             print(f'Current User: '
                   f'{getattr(self.context_manager.current_user, "user_name", None)}')
             print(f'Current Profile: '

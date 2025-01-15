@@ -5,6 +5,7 @@ from controller.actions.menu_actions import AIMenu, Exit, MainMenu, ProfileMenu,
 from controller.actions.note_actions import NoteFromFile
 from controller.actions.profile_actions import NewProfile, SelectProfile
 from controller.actions.user_actions import NewUser, RemoveUser
+from controller.actions.export_actions import Export2Txt
 
 
 class ActionsDispatcher:
@@ -24,6 +25,7 @@ class ActionsDispatcher:
             'generate_cards': GenerateCards(context_manager),
             'work_with_cards': WorkWithCards(context_manager),
             'export_cards': ExportMenu(context_manager),
+            'export_to_txt': Export2Txt(context_manager),
             'main_menu': MainMenu(context_manager),
             'exit': Exit(auth_manager)
         }
