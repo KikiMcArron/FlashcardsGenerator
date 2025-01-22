@@ -22,8 +22,12 @@ class NewUser(Action):
             self.error(f'User {user_name} already exists, try again with a different name or login for existing user.')
             return
         while True:
-            # TODO: Add double check password functionality
             password = stdiomask.getpass(prompt='Please provide your password: ')
+            confirm_password = stdiomask.getpass(prompt='Please confirm your password: ')
+            if password != confirm_password:
+                self.error('The passwords you entered do not match')
+                clear_screen()
+                continue
             try:
                 self.password_validator.is_valid(password)
                 self.user_manager.add_user(user_name, password)
