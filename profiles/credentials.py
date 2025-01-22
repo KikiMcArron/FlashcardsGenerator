@@ -20,10 +20,6 @@ class Credentials(ABC):
 
 
 class AICredentials(ABC):
-    @property
-    @abstractmethod
-    def gpt_model(self):
-        pass
 
     @abstractmethod
     def set_api_key(self, api_key: str) -> None:
@@ -44,12 +40,8 @@ class OpenAICredentials(Credentials, AICredentials):
 
     def __init__(self, gpt_model: str, credentials_type='AI', service_name='OpenAI'):
         super().__init__(credentials_type=credentials_type, service_name=service_name)
-        self._gpt_model = gpt_model
+        self.gpt_model = gpt_model
         self.sensitive_data_manager = SensitiveDataManager()
-
-    @property
-    def gpt_model(self):
-        return self._gpt_model
 
     def as_dict(self):
         return {
